@@ -12,10 +12,10 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --primary: #0F172A; /* Slate Gelap Modern */
-            --accent: #10B981;  /* Hijau Emerald Modern */
-            --danger: #EF4444;  /* Merah Modern */
-            --bg-color: #F8FAFC;/* Abu-abu Sangat Terang */
+            --primary: #0F172A;
+            --accent: #10B981;
+            --danger: #EF4444;
+            --bg-color: #F8FAFC;
             --card-bg: #FFFFFF;
             --text-main: #1E293B;
             --text-muted: #64748B;
@@ -36,7 +36,7 @@
         .view-section { display: none; padding: 20px; max-width: 600px; margin: 0 auto; }
         .view-section.active { display: block; }
         
-        .card { background: var(--card-bg); padding: 18px; margin-bottom: 14px; border-radius: 14px; border: 1px solid var(--border-color); box-shadow: 0 2px 4px rgba(0,0,0,0.01); transition: transform 0.2s; }
+        .card { background: var(--card-bg); padding: 18px; margin-bottom: 14px; border-radius: 14px; border: 1px solid var(--border-color); box-shadow: 0 2px 4px rgba(0,0,0,0.01); }
         .flex-between { display: flex; justify-content: space-between; align-items: center; }
         .text-red { color: var(--danger); } 
         .text-green { color: var(--accent); }
@@ -230,7 +230,22 @@
             <h3 style="margin-top:0; font-size: 18px; font-weight: 600;" id="modal-rek-title">Tambah Rekening</h3>
             <form id="formRekening">
                 <input type="hidden" id="rek-id">
-                <input type="text" id="rek-bank" placeholder="Nama Bank / Dompet (Cth: BCA, OVO)" required>
+                
+                <select id="select-bank-type" onchange="handleBankSelection()" required>
+                    <option value="">Pilih Bank / E-Wallet...</option>
+                    <option value="BCA">BCA</option>
+                    <option value="Mandiri">Mandiri</option>
+                    <option value="BNI">BNI</option>
+                    <option value="BRI">BRI</option>
+                    <option value="GoPay">GoPay</option>
+                    <option value="OVO">OVO</option>
+                    <option value="DANA">DANA</option>
+                    <option value="ShopeePay">ShopeePay</option>
+                    <option value="Lainnya">Lainnya (Ketik Manual)...</option>
+                </select>
+
+                <input type="text" id="rek-bank-manual" placeholder="Nama Bank / E-Wallet Lainnya..." style="display:none;">
+
                 <input type="text" id="rek-name" placeholder="Atas Nama" required>
                 <input type="text" id="rek-no" placeholder="Nomor Rekening / No HP" required>
                 <input type="number" id="rek-bal" placeholder="Saldo Awal (Rp)" required>
@@ -277,7 +292,7 @@
 
         let CURRENT_USER = null;
         let isRegisterMode = false;
-        let APP_DATA = { transactions: [], categories: [], accounts: [] };
+        let APP_DATA = { transactions: [], categories: [], accounts: [], targetAnggaran: 0 };
         let chartInstance = null;
         let activeGType = 'expense', activeGPeriod = 'month';
         let activeLPeriod = 'month';
@@ -508,7 +523,7 @@
             document.getElementById('stat-net').innerText = formatRp(net);
             document.getElementById('stat-net').className = net < 0 ? 'text-red' : 'text-green';
 
-            const targetAnggaran = parseFloat(localStorage.getItem('target_anggaran_' + CURRENT_USER)) || 0;
+            const targetAnggaran = APP_DATA.targetAnggaran || 0;
             const sisaAnggaran = targetAnggaran - exp;
             const persentase = targetAnggaran > 0 ? Math.round((exp / targetAnggaran) * 100) : 0;
 
@@ -520,16 +535,26 @@
         }
 
         function loadTargetAnggaran() {
-            const savedTarget = localStorage.getItem('target_anggaran_' + CURRENT_USER) || '';
-            document.getElementById('input-target-anggaran').value = savedTarget;
+            document.getElementById('input-target-anggaran').value = APP_DATA.targetAnggaran || '';
         }
 
-        document.getElementById('formAnggaran').addEventListener('submit', (e) => {
+        document.getElementById('formAnggaran').addEventListener('submit', async (e) => {
             e.preventDefault();
             const target = document.getElementById('input-target-anggaran').value;
-            localStorage.setItem('target_anggaran_' + CURRENT_USER, target);
-            showAlert("Target anggaran bulanan berhasil disimpan!");
-            renderLaporan();
+            
+            const res = await callAPI({
+                action: 'simpanTargetAnggaran',
+                userId: CURRENT_USER,
+                amount: target
+            });
+
+            if (res.success) {
+                APP_DATA.targetAnggaran = parseFloat(target) || 0;
+                showAlert("Target anggaran bulanan berhasil disimpan ke database!");
+                renderLaporan();
+            } else {
+                showAlert("Gagal menyimpan anggaran: " + res.message);
+            }
         });
 
         function renderRekeningTab() {
@@ -576,10 +601,25 @@
             cont.innerHTML = APP_DATA.categories.map(c => `<div class="cat-list-item"><span style="font-weight:500;">${c.name}</span><span style="font-size:11px; color:var(--text-muted); background:#F1F5F9; padding:2px 8px; border-radius:4px;">${c.type}</span></div>`).join('');
         }
 
+        function handleBankSelection() {
+            const val = document.getElementById('select-bank-type').value;
+            const manualInput = document.getElementById('rek-bank-manual');
+            if (val === 'Lainnya') {
+                manualInput.style.display = 'block';
+                manualInput.required = true;
+                manualInput.value = '';
+            } else {
+                manualInput.style.display = 'none';
+                manualInput.required = false;
+                manualInput.value = val;
+            }
+        }
+
         function openRekModal() {
             document.getElementById('modal-rek-title').innerText = "Tambah Rekening";
             document.getElementById('formRekening').reset();
             document.getElementById('rek-id').value = "";
+            document.getElementById('rek-bank-manual').style.display = 'none';
             document.getElementById('modalRek').style.display = 'flex';
         }
 
@@ -588,7 +628,20 @@
             if(!acc) return;
             document.getElementById('modal-rek-title').innerText = "Edit Rekening";
             document.getElementById('rek-id').value = acc.id;
-            document.getElementById('rek-bank').value = acc.bank;
+            
+            const selectBank = document.getElementById('select-bank-type');
+            const manualInput = document.getElementById('rek-bank-manual');
+            
+            const options = Array.from(selectBank.options).map(o => o.value);
+            if (options.includes(acc.bank)) {
+                selectBank.value = acc.bank;
+                manualInput.style.display = 'none';
+            } else {
+                selectBank.value = 'Lainnya';
+                manualInput.style.display = 'block';
+                manualInput.value = acc.bank;
+            }
+
             document.getElementById('rek-name').value = acc.name;
             document.getElementById('rek-no').value = acc.number;
             document.getElementById('rek-bal').value = acc.balance;
@@ -663,10 +716,13 @@
             const btn = document.getElementById('btn-rek-save'); btn.innerText = 'Menyimpan...'; btn.disabled = true;
             const rekId = document.getElementById('rek-id').value;
             const actionType = rekId ? 'editRekening' : 'simpanRekening';
+            
+            const bankVal = document.getElementById('select-bank-type').value;
+            const finalBank = bankVal === 'Lainnya' ? document.getElementById('rek-bank-manual').value : bankVal;
 
             const res = await callAPI({
                 action: actionType, userId: CURRENT_USER, id: rekId,
-                bank: document.getElementById('rek-bank').value, name: document.getElementById('rek-name').value,
+                bank: finalBank, name: document.getElementById('rek-name').value,
                 number: document.getElementById('rek-no').value, balance: document.getElementById('rek-bal').value
             });
             btn.innerText = 'Simpan Rekening'; btn.disabled = false;
