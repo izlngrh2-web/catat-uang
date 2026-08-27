@@ -6,49 +6,67 @@
     <title>Catat Uang</title>
     <!-- PWA Config -->
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#F6C122">
+    <meta name="theme-color" content="#0F172A">
     <link rel="apple-touch-icon" href="icon-192.png">
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: sans-serif; margin: 0; background: #F5F5F5; color: #333; }
-        #auth-container { display: flex; justify-content: center; align-items: center; height: 100vh; background: #F6C122; padding: 20px; box-sizing: border-box; }
-        .auth-card { background: white; padding: 25px; border-radius: 12px; width: 100%; max-width: 350px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); text-align: center; }
-        .auth-card h2 { margin-top: 0; }
-        .toggle-auth { color: #2563eb; cursor: pointer; font-size: 14px; margin-top: 15px; display: inline-block; }
+        :root {
+            --primary: #0F172A; /* Slate Gelap Modern */
+            --accent: #10B981;  /* Hijau Emerald Modern */
+            --danger: #EF4444;  /* Merah Modern */
+            --bg-color: #F8FAFC;/* Abu-abu Sangat Terang */
+            --card-bg: #FFFFFF;
+            --text-main: #1E293B;
+            --text-muted: #64748B;
+            --border-color: #E2E8F0;
+        }
+
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; background: var(--bg-color); color: var(--text-main); -webkit-font-smoothing: antialiased; }
         
-        #app-container { display: none; padding-bottom: 70px; }
-        .header { background: #F6C122; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .header h2 { margin: 0; font-size: 18px; }
-        .view-section { display: none; padding: 15px; }
+        #auth-container { display: flex; justify-content: center; align-items: center; height: 100vh; background: linear-gradient(135deg, #0F172A, #1E293B); padding: 20px; box-sizing: border-box; }
+        .auth-card { background: var(--card-bg); padding: 30px; border-radius: 16px; width: 100%; max-width: 380px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.2); text-align: center; }
+        .auth-card h2 { margin-top: 0; color: var(--primary); font-size: 24px; font-weight: 700; }
+        .toggle-auth { color: #3B82F6; cursor: pointer; font-size: 14px; margin-top: 20px; display: inline-block; font-weight: 500; }
+        
+        #app-container { display: none; padding-bottom: 80px; }
+        .header { background: var(--card-bg); padding: 18px 20px; text-align: center; position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--border-color); box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+        .header h2 { margin: 0; font-size: 17px; font-weight: 600; color: var(--text-main); }
+        
+        .view-section { display: none; padding: 20px; max-width: 600px; margin: 0 auto; }
         .view-section.active { display: block; }
         
-        .card { background: white; padding: 15px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .card { background: var(--card-bg); padding: 18px; margin-bottom: 14px; border-radius: 14px; border: 1px solid var(--border-color); box-shadow: 0 2px 4px rgba(0,0,0,0.01); transition: transform 0.2s; }
         .flex-between { display: flex; justify-content: space-between; align-items: center; }
-        .text-red { color: #dc2626; } .text-green { color: #16a34a; }
+        .text-red { color: var(--danger); } 
+        .text-green { color: var(--accent); }
         
-        .sub-nav { display: flex; background: #e5e5e5; border-radius: 8px; margin-bottom: 15px; overflow: hidden; }
-        .sub-nav div { flex: 1; text-align: center; padding: 8px; cursor: pointer; font-size: 14px; }
-        .sub-nav div.active { background: #F6C122; font-weight: bold; }
+        .sub-nav { display: flex; background: #F1F5F9; border-radius: 10px; margin-bottom: 18px; overflow: hidden; padding: 4px; border: 1px solid var(--border-color); }
+        .sub-nav div { flex: 1; text-align: center; padding: 10px; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--text-muted); border-radius: 8px; transition: all 0.2s; }
+        .sub-nav div.active { background: var(--card-bg); color: var(--primary); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         
-        input, select { width: 100%; padding: 10px; margin-bottom: 12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
-        .btn { width: 100%; padding: 12px; background: #F6C122; border: none; font-weight: bold; border-radius: 6px; cursor: pointer; }
+        input, select { width: 100%; padding: 12px 14px; margin-bottom: 14px; border: 1px solid var(--border-color); border-radius: 10px; box-sizing: border-box; font-size: 14px; background: #F8FAFC; color: var(--text-main); outline: none; transition: border-color 0.2s; }
+        input:focus, select:focus { border-color: var(--primary); background: #fff; }
         
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; border-top: 1px solid #ddd; z-index: 100; height: 60px; }
-        .nav-item { flex: 1; text-align: center; padding-top: 8px; font-size: 12px; color: #666; cursor: pointer; }
-        .nav-item.active { color: #F6C122; font-weight: bold; }
-        .nav-icon { font-size: 20px; display: block; margin-bottom: 2px; }
+        .btn { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; font-weight: 600; border-radius: 10px; cursor: pointer; font-size: 14px; transition: opacity 0.2s; }
+        .btn:active { opacity: 0.9; }
         
-        .fab-center { position: absolute; left: 50%; transform: translateX(-50%); top: -22px; background: #F6C122; width: 52px; height: 52px; border-radius: 50%; font-size: 28px; border: 4px solid #F5F5F5; box-shadow: 0 4px 6px rgba(0,0,0,0.15); z-index: 101; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: var(--card-bg); display: flex; border-top: 1px solid var(--border-color); z-index: 100; height: 65px; }
+        .nav-item { flex: 1; text-align: center; padding-top: 10px; font-size: 11px; color: var(--text-muted); cursor: pointer; font-weight: 500; }
+        .nav-item.active { color: var(--primary); font-weight: 700; }
+        .nav-icon { font-size: 20px; display: block; margin-bottom: 3px; }
         
-        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 200; }
-        .modal-content { background: white; padding: 20px; border-radius: 8px; width: 85%; max-height: 90vh; overflow-y: auto; }
-        .cat-list-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; align-items: center; }
+        .fab-center { position: absolute; left: 50%; transform: translateX(-50%); top: -24px; background: var(--accent); width: 54px; height: 54px; border-radius: 50%; font-size: 28px; color: white; border: 4px solid var(--bg-color); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4); z-index: 101; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
         
-        .tx-actions { display: flex; gap: 8px; margin-top: 8px; }
-        .tx-actions button { padding: 4px 10px; font-size: 11px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .btn-edit { background: #3b82f6; color: white; }
-        .btn-del { background: #dc2626; color: white; }
+        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); align-items: center; justify-content: center; z-index: 200; padding: 20px; box-sizing: border-box; }
+        .modal-content { background: var(--card-bg); padding: 24px; border-radius: 16px; width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+        .cat-list-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border-color); align-items: center; font-size: 14px; }
+        .cat-list-item:last-child { border-bottom: none; }
+        
+        .tx-actions { display: flex; gap: 8px; margin-top: 12px; }
+        .tx-actions button { padding: 6px 12px; font-size: 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        .btn-edit { background: #E0E7FF; color: #4338CA; }
+        .btn-del { background: #FEE2E2; color: #991B1B; }
     </style>
 </head>
 <body>
@@ -56,6 +74,7 @@
     <div id="auth-container">
         <div class="auth-card">
             <h2 id="auth-title">Catat Uang</h2>
+            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 24px;">Kelola keuangan jadi lebih mudah & elegan.</p>
             <form id="formAuth">
                 <input type="text" id="auth-name" placeholder="Nama Lengkap" style="display:none;">
                 <input type="text" id="auth-user" placeholder="Username" required>
@@ -69,7 +88,7 @@
     <div id="app-container">
         <div class="header">
             <h2 id="header-title">Riwayat Transaksi</h2>
-            <button onclick="logout()" style="position:absolute; right:15px; top:15px; background:none; border:none; font-weight:bold; cursor:pointer; color:#333;">Keluar</button>
+            <button onclick="logout()" style="position:absolute; right:15px; top:15px; background:none; border:none; font-weight:600; cursor:pointer; color:var(--danger); font-size: 13px;">Keluar</button>
         </div>
 
         <div id="view-riwayat" class="view-section active">
@@ -90,9 +109,9 @@
             <input type="number" id="g-filter-year" style="display:none;" value="2026" onchange="renderGrafik()">
             
             <div class="card"><canvas id="myChart"></canvas></div>
-            <h3 style="font-size:16px;">Top 5 Kategori</h3>
+            <h3 style="font-size:15px; font-weight:600; margin: 20px 0 10px 0;">Top 5 Kategori</h3>
             <div id="list-top5" class="card"></div>
-            <h3 style="font-size:16px;">Semua Kategori</h3>
+            <h3 style="font-size:15px; font-weight:600; margin: 20px 0 10px 0;">Semua Kategori</h3>
             <div id="list-all-cat" class="card"></div>
         </div>
 
@@ -104,44 +123,44 @@
             <input type="month" id="l-filter-month" style="display:block;" onchange="renderLaporan()">
             <input type="number" id="l-filter-year" style="display:none;" value="2026" onchange="renderLaporan()">
 
-            <div style="display: flex; background: #e5e5e5; border-radius: 8px; margin-bottom: 15px; overflow: hidden; padding: 3px;">
-                <div id="btn-sub-analisis" onclick="switchLaporanSub('analisis')" style="flex:1; text-align:center; padding:10px; cursor:pointer; font-weight:bold; background:black; color:#F6C122; border-radius:6px;">Analisis</div>
-                <div id="btn-sub-rekening" onclick="switchLaporanSub('rekening')" style="flex:1; text-align:center; padding:10px; cursor:pointer; font-weight:bold; color:#666;">Rekening</div>
+            <div style="display: flex; background: #F1F5F9; border-radius: 10px; margin-bottom: 18px; overflow: hidden; padding: 4px; border: 1px solid var(--border-color);">
+                <div id="btn-sub-analisis" onclick="switchLaporanSub('analisis')" style="flex:1; text-align:center; padding:10px; cursor:pointer; font-weight:600; background:var(--primary); color:white; border-radius:8px; font-size: 13px;">Analisis</div>
+                <div id="btn-sub-rekening" onclick="switchLaporanSub('rekening')" style="flex:1; text-align:center; padding:10px; cursor:pointer; font-weight:500; color:var(--text-muted); font-size: 13px;">Rekening</div>
             </div>
 
             <div id="sub-laporan-analisis">
                 <div class="card">
-                    <div class="flex-between" style="margin-bottom: 10px;"><strong>Statistik Periode</strong><span>&gt;</span></div>
-                    <div class="flex-between" style="font-size: 14px; color: #555;">
+                    <div class="flex-between" style="margin-bottom: 12px;"><strong style="font-size: 14px;">Statistik Periode</strong><span style="color:var(--text-muted);">&gt;</span></div>
+                    <div class="flex-between" style="font-size: 14px; color: var(--text-muted);">
                         <div>
-                            <div id="stat-bln" style="font-size: 18px; font-weight: bold; color: black; margin-bottom: 5px;">Agu</div>
-                            <span style="font-size: 12px; color: #888;">Periode Aktif</span>
+                            <div id="stat-bln" style="font-size: 20px; font-weight: 700; color: var(--primary); margin-bottom: 4px;">Agu</div>
+                            <span style="font-size: 11px;">Periode Aktif</span>
                         </div>
-                        <div style="text-align: right;"><span style="color: #888; font-size: 12px;">Pengeluaran</span><div id="stat-out" class="text-red" style="font-weight: bold;">0</div></div>
-                        <div style="text-align: right;"><span style="color: #888; font-size: 12px;">Pemasukan</span><div id="stat-in" class="text-green" style="font-weight: bold;">0</div></div>
-                        <div style="text-align: right;"><span style="color: #888; font-size: 12px;">Saldo</span><div id="stat-net" style="font-weight: bold;">0</div></div>
+                        <div style="text-align: right;"><span style="font-size: 11px;">Pengeluaran</span><div id="stat-out" class="text-red" style="font-weight: 700; font-size: 15px;">0</div></div>
+                        <div style="text-align: right;"><span style="font-size: 11px;">Pemasukan</span><div id="stat-in" class="text-green" style="font-weight: 700; font-size: 15px;">0</div></div>
+                        <div style="text-align: right;"><span style="font-size: 11px;">Saldo</span><div id="stat-net" style="font-weight: 700; font-size: 15px;">0</div></div>
                     </div>
                 </div>
 
                 <div class="card">
-                    <div class="flex-between" style="margin-bottom: 15px;"><strong>Anggaran Bulanan</strong><span>&gt;</span></div>
+                    <div class="flex-between" style="margin-bottom: 15px;"><strong style="font-size: 14px;">Anggaran Bulanan</strong><span style="color:var(--text-muted);">&gt;</span></div>
                     <div class="flex-between">
-                        <div id="anggaran-circle" style="width: 80px; height: 80px; border: 8px solid #e5e5e5; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #888; font-size: 13px;">
+                        <div id="anggaran-circle" style="width: 75px; height: 75px; border: 6px solid #F1F5F9; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--primary); font-size: 14px;">
                             0%
                         </div>
                         <div style="flex-grow: 1; margin-left: 20px;">
-                            <div class="flex-between" style="margin-bottom: 8px; font-size: 14px;"><span>Tersisa :</span><strong id="anggaran-tersisa">0</strong></div>
-                            <div class="flex-between" style="margin-bottom: 8px; font-size: 14px;"><span>Anggaran :</span><strong id="anggaran-limit">0</strong></div>
-                            <div class="flex-between" style="font-size: 14px;"><span>Pengeluaran :</span><strong id="anggaran-out" class="text-red">0</strong></div>
+                            <div class="flex-between" style="margin-bottom: 8px; font-size: 13px;"><span style="color:var(--text-muted);">Tersisa :</span><strong id="anggaran-tersisa">0</strong></div>
+                            <div class="flex-between" style="margin-bottom: 8px; font-size: 13px;"><span style="color:var(--text-muted);">Anggaran :</span><strong id="anggaran-limit">0</strong></div>
+                            <div class="flex-between" style="font-size: 13px;"><span style="color:var(--text-muted);">Pengeluaran :</span><strong id="anggaran-out" class="text-red">0</strong></div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div id="sub-laporan-rekening" style="display: none;">
-                <div class="card">
-                    <h3>Total Seluruh Saldo</h3>
-                    <h2 id="rek-total-saldo" style="color: #2563eb; margin: 5px 0;">Rp 0</h2>
+                <div class="card" style="background: linear-gradient(135deg, #0F172A, #1E293B); color: white;">
+                    <span style="font-size: 12px; opacity: 0.8;">Total Seluruh Saldo</span>
+                    <h2 id="rek-total-saldo" style="color: #34D399; margin: 8px 0 0 0; font-size: 24px;">Rp 0</h2>
                 </div>
                 <div id="list-laporan-rekening"></div>
             </div>
@@ -149,31 +168,31 @@
 
         <div id="view-saya" class="view-section">
             <div class="card">
-                <h3>Target Anggaran Bulanan</h3>
-                <form id="formAnggaran">
+                <h3 style="margin-top:0; font-size: 15px; font-weight: 600;">Target Anggaran Bulanan</h3>
+                <form id="formAnggaran" style="margin-bottom: 0;">
                     <input type="number" id="input-target-anggaran" placeholder="Masukkan Target Anggaran (Rp)" required>
                     <button type="submit" class="btn">Simpan Target Anggaran</button>
                 </form>
             </div>
             
             <div class="card">
-                <div class="flex-between">
-                    <h3>Kelola Rekening / Dompet</h3>
-                    <button class="btn" style="width:auto; padding:5px 10px;" onclick="openRekModal()">+ Tambah</button>
+                <div class="flex-between" style="margin-bottom: 12px;">
+                    <h3 style="margin:0; font-size: 15px; font-weight: 600;">Kelola Rekening / Dompet</h3>
+                    <button class="btn" style="width:auto; padding:6px 12px; font-size: 12px;" onclick="openRekModal()">+ Tambah</button>
                 </div>
                 <div id="list-rekening-setting"></div>
             </div>
 
             <div class="card">
-                <div class="flex-between">
-                    <h3>Kategori</h3>
-                    <button class="btn" style="width:auto; padding:5px 10px;" onclick="document.getElementById('modalCat').style.display='flex'">+ Tambah</button>
+                <div class="flex-between" style="margin-bottom: 12px;">
+                    <h3 style="margin:0; font-size: 15px; font-weight: 600;">Kategori</h3>
+                    <button class="btn" style="width:auto; padding:6px 12px; font-size: 12px;" onclick="document.getElementById('modalCat').style.display='flex'">+ Tambah</button>
                 </div>
                 <div id="list-kategori-setting"></div>
             </div>
         </div>
 
-        <div class="bottom-nav" style="position: fixed; bottom: 0; width: 100%;">
+        <div class="bottom-nav">
             <div class="nav-item active" onclick="switchTab('riwayat', this)"><span class="nav-icon">📝</span>Riwayat</div>
             <div class="nav-item" onclick="switchTab('grafik', this)"><span class="nav-icon">📊</span>Grafik</div>
             <div style="flex: 1; position: relative;">
@@ -187,7 +206,7 @@
     <!-- MODAL TRANSAKSI -->
     <div class="modal" id="modalTx">
         <div class="modal-content">
-            <h3 style="margin-top:0;" id="modal-tx-title">Tambah Transaksi</h3>
+            <h3 style="margin-top:0; font-size: 18px; font-weight: 600;" id="modal-tx-title">Tambah Transaksi</h3>
             <form id="formTx">
                 <input type="hidden" id="tx-id">
                 <select id="tx-type" onchange="populateCategories()">
@@ -200,7 +219,7 @@
                 <input type="number" id="tx-amount" placeholder="Nominal (Rp)" required>
                 <input type="date" id="tx-date" required>
                 <button type="submit" class="btn" id="btn-tx">Simpan</button>
-                <button type="button" class="btn" style="background:#ddd; margin-top:10px;" onclick="document.getElementById('modalTx').style.display='none'">Batal</button>
+                <button type="button" class="btn" style="background:#E2E8F0; color:var(--text-main); margin-top:8px;" onclick="document.getElementById('modalTx').style.display='none'">Batal</button>
             </form>
         </div>
     </div>
@@ -208,7 +227,7 @@
     <!-- MODAL REKENING -->
     <div class="modal" id="modalRek">
         <div class="modal-content">
-            <h3 style="margin-top:0;" id="modal-rek-title">Tambah Rekening</h3>
+            <h3 style="margin-top:0; font-size: 18px; font-weight: 600;" id="modal-rek-title">Tambah Rekening</h3>
             <form id="formRekening">
                 <input type="hidden" id="rek-id">
                 <input type="text" id="rek-bank" placeholder="Nama Bank / Dompet (Cth: BCA, OVO)" required>
@@ -216,7 +235,7 @@
                 <input type="text" id="rek-no" placeholder="Nomor Rekening / No HP" required>
                 <input type="number" id="rek-bal" placeholder="Saldo Awal (Rp)" required>
                 <button type="submit" class="btn" id="btn-rek-save">Simpan Rekening</button>
-                <button type="button" class="btn" style="background:#ddd; margin-top:10px;" onclick="document.getElementById('modalRek').style.display='none'">Batal</button>
+                <button type="button" class="btn" style="background:#E2E8F0; color:var(--text-main); margin-top:8px;" onclick="document.getElementById('modalRek').style.display='none'">Batal</button>
             </form>
         </div>
     </div>
@@ -224,13 +243,32 @@
     <!-- MODAL KATEGORI -->
     <div class="modal" id="modalCat">
         <div class="modal-content">
-            <h3 style="margin-top:0;">Tambah Kategori</h3>
+            <h3 style="margin-top:0; font-size: 18px; font-weight: 600;">Tambah Kategori</h3>
             <form id="formCat">
                 <select id="cat-type"><option value="expense">Pengeluaran</option><option value="income">Pemasukan</option></select>
                 <input type="text" id="cat-name" placeholder="Nama Kategori" required>
                 <button type="submit" class="btn" id="btn-cat">Simpan</button>
-                <button type="button" class="btn" style="background:#ddd; margin-top:10px;" onclick="document.getElementById('modalCat').style.display='none'">Batal</button>
+                <button type="button" class="btn" style="background:#E2E8F0; color:var(--text-main); margin-top:8px;" onclick="document.getElementById('modalCat').style.display='none'">Batal</button>
             </form>
+        </div>
+    </div>
+
+    <!-- MODAL KONFIRMASI KUSTOM -->
+    <div class="modal" id="modalCustomConfirm">
+        <div class="modal-content" style="text-align: center; max-width: 320px;">
+            <p id="custom-confirm-text" style="font-size: 15px; margin-bottom: 20px; font-weight: 500;"></p>
+            <div style="display: flex; gap: 10px;">
+                <button type="button" class="btn" style="background: #E2E8F0; color: var(--text-main); margin-bottom: 0;" id="btn-confirm-cancel">Batal</button>
+                <button type="button" class="btn" style="background: var(--danger); color: white; margin-bottom: 0;" id="btn-confirm-ok">Ya, Hapus</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL ALERT KUSTOM -->
+    <div class="modal" id="modalCustomAlert">
+        <div class="modal-content" style="text-align: center; max-width: 320px;">
+            <p id="custom-alert-text" style="font-size: 15px; margin-bottom: 20px; font-weight: 500;"></p>
+            <button type="button" class="btn" style="background: var(--primary); margin-bottom: 0;" onclick="closeCustomAlert()">OK</button>
         </div>
     </div>
 
@@ -260,6 +298,37 @@
             }
         };
 
+        function showConfirm(message, onYes) {
+            document.getElementById('custom-confirm-text').innerText = message;
+            const modal = document.getElementById('modalCustomConfirm');
+            modal.style.display = 'flex';
+
+            const btnOk = document.getElementById('btn-confirm-ok');
+            const btnCancel = document.getElementById('btn-confirm-cancel');
+            
+            const newBtnOk = btnOk.cloneNode(true);
+            const newBtnCancel = btnCancel.cloneNode(true);
+            btnOk.parentNode.replaceChild(newBtnOk, btnOk);
+            btnCancel.parentNode.replaceChild(newBtnCancel, btnCancel);
+
+            newBtnOk.onclick = function() {
+                modal.style.display = 'none';
+                onYes();
+            };
+            newBtnCancel.onclick = function() {
+                modal.style.display = 'none';
+            };
+        }
+
+        function showAlert(message) {
+            document.getElementById('custom-alert-text').innerText = message;
+            document.getElementById('modalCustomAlert').style.display = 'flex';
+        }
+
+        function closeCustomAlert() {
+            document.getElementById('modalCustomAlert').style.display = 'none';
+        }
+
         async function callAPI(payload) {
             try {
                 const response = await fetch(GAS_URL, {
@@ -268,7 +337,7 @@
                 });
                 return await response.json();
             } catch (err) {
-                alert("Gagal terhubung ke server: " + err.message);
+                showAlert("Gagal terhubung ke server: " + err.message);
                 return { success: false };
             }
         }
@@ -289,15 +358,15 @@
 
             if (isRegisterMode) {
                 const res = await callAPI({ action: 'register', username: user, pin: pin, nama: nama });
-                if(res.success) { alert("Pendaftaran berhasil! Silakan Masuk."); toggleAuthMode(); } 
-                else { alert(res.message); }
+                if(res.success) { showAlert("Pendaftaran berhasil! Silakan Masuk."); toggleAuthMode(); } 
+                else { showAlert(res.message); }
             } else {
                 const res = await callAPI({ action: 'login', username: user, pin: pin });
                 if(res.success) {
                     CURRENT_USER = res.userId;
                     localStorage.setItem('auth_user_id', CURRENT_USER);
                     showApp();
-                } else { alert(res.message); }
+                } else { showAlert(res.message); }
             }
         });
 
@@ -340,12 +409,12 @@
             const secRek = document.getElementById('sub-laporan-rekening');
 
             if (sub === 'analisis') {
-                btnAna.style.background = 'black'; btnAna.style.color = '#F6C122';
-                btnRek.style.background = 'transparent'; btnRek.style.color = '#666';
+                btnAna.style.background = 'var(--primary)'; btnAna.style.color = 'white'; btnAna.style.fontWeight = '600';
+                btnRek.style.background = 'transparent'; btnRek.style.color = 'var(--text-muted)'; btnRek.style.fontWeight = '500';
                 secAna.style.display = 'block'; secRek.style.display = 'none';
             } else {
-                btnRek.style.background = 'black'; btnRek.style.color = '#F6C122';
-                btnAna.style.background = 'transparent'; btnAna.style.color = '#666';
+                btnRek.style.background = 'var(--primary)'; btnRek.style.color = 'white'; btnRek.style.fontWeight = '600';
+                btnAna.style.background = 'transparent'; btnAna.style.color = 'var(--text-muted)'; btnAna.style.fontWeight = '500';
                 secRek.style.display = 'block'; secAna.style.display = 'none';
                 renderRekeningTab();
             }
@@ -373,7 +442,7 @@
             const data = getFilteredTx('month', val);
             const container = document.getElementById('list-riwayat');
             container.innerHTML = '';
-            if(data.length === 0) return container.innerHTML = '<p style="text-align:center;">Tidak ada transaksi.</p>';
+            if(data.length === 0) return container.innerHTML = '<p style="text-align:center; color:var(--text-muted); padding: 20px;">Tidak ada transaksi.</p>';
 
             data.forEach(tx => {
                 const isInc = tx.type === 'income';
@@ -383,10 +452,10 @@
                     <div class="card">
                         <div class="flex-between">
                             <div>
-                                <div style="font-weight:bold;">${tx.desc}</div>
-                                <div style="font-size:12px; color:#666;">${tx.category} • [${accName}] | ${tx.date}</div>
+                                <div style="font-weight:600; font-size: 15px;">${tx.desc}</div>
+                                <div style="font-size:12px; color:var(--text-muted); margin-top: 4px;">${tx.category} • [${accName}] | ${tx.date}</div>
                             </div>
-                            <div class="${isInc ? 'text-green' : 'text-red'}" style="font-weight:bold;">
+                            <div class="${isInc ? 'text-green' : 'text-red'}" style="font-weight:700; font-size: 15px;">
                                 ${isInc ? '+' : '-'}${formatRp(tx.amount)}
                             </div>
                         </div>
@@ -414,15 +483,15 @@
             data.forEach(tx => { catSum[tx.category] = (catSum[tx.category] || 0) + tx.amount; });
             let sortedCats = Object.keys(catSum).map(k => ({ name: k, total: catSum[k] })).sort((a,b) => b.total - a.total);
             
-            document.getElementById('list-top5').innerHTML = sortedCats.slice(0,5).map(c => `<div class="cat-list-item"><span>${c.name}</span><strong>${formatRp(c.total)}</strong></div>`).join('') || '<p>Data kosong</p>';
-            document.getElementById('list-all-cat').innerHTML = sortedCats.map(c => `<div class="cat-list-item"><span>${c.name}</span><strong>${formatRp(c.total)}</strong></div>`).join('') || '<p>Data kosong</p>';
+            document.getElementById('list-top5').innerHTML = sortedCats.slice(0,5).map(c => `<div class="cat-list-item"><span>${c.name}</span><strong>${formatRp(c.total)}</strong></div>`).join('') || '<p style="color:var(--text-muted); font-size:13px;">Data kosong</p>';
+            document.getElementById('list-all-cat').innerHTML = sortedCats.map(c => `<div class="cat-list-item"><span>${c.name}</span><strong>${formatRp(c.total)}</strong></div>`).join('') || '<p style="color:var(--text-muted); font-size:13px;">Data kosong</p>';
 
             const ctx = document.getElementById('myChart').getContext('2d');
             if(chartInstance) chartInstance.destroy();
             chartInstance = new Chart(ctx, {
                 type: 'doughnut',
-                data: { labels: sortedCats.map(c => c.name), datasets: [{ data: sortedCats.map(c => c.total), backgroundColor: ['#F6C122', '#dc2626', '#16a34a', '#3b82f6', '#8b5cf6', '#f97316', '#14b8a6'] }] },
-                options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+                data: { labels: sortedCats.map(c => c.name), datasets: [{ data: sortedCats.map(c => c.total), backgroundColor: ['#0F172A', '#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'] }] },
+                options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } } }
             });
         }
 
@@ -459,7 +528,7 @@
             e.preventDefault();
             const target = document.getElementById('input-target-anggaran').value;
             localStorage.setItem('target_anggaran_' + CURRENT_USER, target);
-            alert("Target anggaran bulanan berhasil disimpan!");
+            showAlert("Target anggaran bulanan berhasil disimpan!");
             renderLaporan();
         });
 
@@ -469,7 +538,7 @@
             container.innerHTML = '';
 
             if (APP_DATA.accounts.length === 0) {
-                container.innerHTML = '<div class="card"><p style="text-align:center;">Belum ada rekening/dompet terdaftar.</p></div>';
+                container.innerHTML = '<div class="card"><p style="text-align:center; color:var(--text-muted);">Belum ada rekening/dompet terdaftar.</p></div>';
             }
 
             APP_DATA.accounts.forEach(acc => {
@@ -477,10 +546,10 @@
                 container.innerHTML += `
                     <div class="card flex-between">
                         <div>
-                            <strong style="font-size:16px;">${acc.bank}</strong>
-                            <div style="font-size:12px; color:#666;">${acc.name} • ${acc.number}</div>
+                            <strong style="font-size:15px;">${acc.bank}</strong>
+                            <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">${acc.name} • ${acc.number}</div>
                         </div>
-                        <div style="font-weight:bold; color:#2563eb;">Rp ${formatRp(acc.balance)}</div>
+                        <div style="font-weight:700; color:var(--accent);">Rp ${formatRp(acc.balance)}</div>
                     </div>`;
             });
 
@@ -492,19 +561,19 @@
             cont.innerHTML = APP_DATA.accounts.map(acc => `
                 <div class="cat-list-item">
                     <div>
-                        <strong>${acc.bank}</strong> (${acc.number})<br>
-                        <span style="font-size:12px; color:#666;">Saldo: Rp ${formatRp(acc.balance)}</span>
+                        <strong style="font-weight:600;">${acc.bank}</strong> <span style="color:var(--text-muted); font-size:12px;">(${acc.number})</span><br>
+                        <span style="font-size:12px; color:var(--accent); font-weight:600;">Saldo: Rp ${formatRp(acc.balance)}</span>
                     </div>
-                    <div>
+                    <div style="display:flex; gap:6px;">
                         <button class="btn-edit" onclick="openEditRekModal('${acc.id}')">Edit</button>
                         <button class="btn-del" onclick="hapusRekening('${acc.id}')">Hapus</button>
                     </div>
-                </div>`).join('') || '<p style="text-align:center;">Belum ada rekening.</p>';
+                </div>`).join('') || '<p style="text-align:center; color:var(--text-muted); font-size:13px; padding:10px 0;">Belum ada rekening.</p>';
         }
 
         function renderCategorySettings() {
             const cont = document.getElementById('list-kategori-setting');
-            cont.innerHTML = APP_DATA.categories.map(c => `<div class="cat-list-item"><span>${c.name}</span><span style="font-size:12px;color:#888;">${c.type}</span></div>`).join('');
+            cont.innerHTML = APP_DATA.categories.map(c => `<div class="cat-list-item"><span style="font-weight:500;">${c.name}</span><span style="font-size:11px; color:var(--text-muted); background:#F1F5F9; padding:2px 8px; border-radius:4px;">${c.type}</span></div>`).join('');
         }
 
         function openRekModal() {
@@ -579,13 +648,14 @@
             });
             btn.innerText = 'Simpan'; btn.disabled = false;
             if(res.success) { document.getElementById('modalTx').style.display='none'; document.getElementById('formTx').reset(); initApp(); } 
-            else alert("Error: " + res.message);
+            else showAlert("Error: " + res.message);
         });
 
         async function hapusTransaksi(id) {
-            if(!confirm("Yakin ingin menghapus transaksi ini?")) return;
-            const res = await callAPI({ action: 'hapusTransaksi', userId: CURRENT_USER, id: id });
-            if(res.success) { initApp(); } else { alert("Gagal menghapus: " + res.message); }
+            showConfirm("Yakin ingin menghapus transaksi ini?", async function() {
+                const res = await callAPI({ action: 'hapusTransaksi', userId: CURRENT_USER, id: id });
+                if(res.success) { initApp(); } else { showAlert("Gagal menghapus: " + res.message); }
+            });
         }
 
         document.getElementById('formRekening').addEventListener('submit', async (e) => {
@@ -600,14 +670,21 @@
                 number: document.getElementById('rek-no').value, balance: document.getElementById('rek-bal').value
             });
             btn.innerText = 'Simpan Rekening'; btn.disabled = false;
-            if(res.success) { document.getElementById('modalRek').style.display='none'; document.getElementById('formRekening').reset(); initApp(); } 
-            else alert("Error: " + res.message);
+            if(res.success) { 
+                showAlert("Rekening berhasil disimpan!"); 
+                document.getElementById('modalRek').style.display='none'; 
+                document.getElementById('formRekening').reset(); 
+                initApp(); 
+            } else {
+                showAlert("Error: " + res.message);
+            }
         });
 
         async function hapusRekening(id) {
-            if(!confirm("Yakin ingin menghapus rekening ini?")) return;
-            const res = await callAPI({ action: 'hapusRekening', userId: CURRENT_USER, id: id });
-            if(res.success) { initApp(); } else { alert("Gagal menghapus: " + res.message); }
+            showConfirm("Yakin ingin menghapus rekening ini?", async function() {
+                const res = await callAPI({ action: 'hapusRekening', userId: CURRENT_USER, id: id });
+                if(res.success) { initApp(); } else { showAlert("Gagal menghapus: " + res.message); }
+            });
         }
 
         document.getElementById('formCat').addEventListener('submit', async (e) => {
