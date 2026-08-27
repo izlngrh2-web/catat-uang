@@ -44,6 +44,12 @@
         .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 200; }
         .modal-content { background: white; padding: 20px; border-radius: 8px; width: 85%; max-height: 90vh; overflow-y: auto; }
         .cat-list-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
+        
+        /* Style Tambahan untuk Tombol Aksi Riwayat */
+        .tx-actions { display: flex; gap: 8px; margin-top: 8px; }
+        .tx-actions button { padding: 4px 10px; font-size: 11px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-edit { background: #3b82f6; color: white; }
+        .btn-del { background: #dc2626; color: white; }
     </style>
 </head>
 <body>
@@ -92,6 +98,14 @@
         </div>
 
         <div id="view-laporan" class="view-section">
+            <!-- Pilihan Periode Laporan: Bulanan / Tahunan -->
+            <div class="sub-nav">
+                <div id="l-per-month" class="active" onclick="setLaporanPeriod('month')">Bulanan</div>
+                <div id="l-per-year" onclick="setLaporanPeriod('year')">Tahunan</div>
+            </div>
+            <input type="month" id="l-filter-month" style="display:block;" onchange="renderLaporan()">
+            <input type="number" id="l-filter-year" style="display:none;" value="2026" onchange="renderLaporan()">
+
             <div style="display: flex; background: #e5e5e5; border-radius: 8px; margin-bottom: 15px; overflow: hidden; padding: 3px;">
                 <div id="btn-sub-analisis" onclick="switchLaporanSub('analisis')" style="flex:1; text-align:center; padding:10px; cursor:pointer; font-weight:bold; background:black; color:#F6C122; border-radius:6px;">Analisis</div>
                 <div id="btn-sub-rekening" onclick="switchLaporanSub('rekening')" style="flex:1; text-align:center; padding:10px; cursor:pointer; font-weight:bold; color:#666;">Rekening</div>
@@ -99,7 +113,7 @@
 
             <div id="sub-laporan-analisis">
                 <div class="card">
-                    <div class="flex-between" style="margin-bottom: 10px;"><strong>Statistik Bulanan</strong><span>&gt;</span></div>
+                    <div class="flex-between" style="margin-bottom: 10px;"><strong>Statistik Periode</strong><span>&gt;</span></div>
                     <div class="flex-between" style="font-size: 14px; color: #555;">
                         <div>
                             <div id="stat-bln" style="font-size: 18px; font-weight: bold; color: black; margin-bottom: 5px;">Agu</div>
@@ -108,6 +122,18 @@
                         <div style="text-align: right;"><span style="color: #888; font-size: 12px;">Pengeluaran</span><div id="stat-out" class="text-red" style="font-weight: bold;">0</div></div>
                         <div style="text-align: right;"><span style="color: #888; font-size: 12px;">Pemasukan</span><div id="stat-in" class="text-green" style="font-weight: bold;">0</div></div>
                         <div style="text-align: right;"><span style="color: #888; font-size: 12px;">Saldo</span><div id="stat-net" style="font-weight: bold;">0</div></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="flex-between" style="margin-bottom: 15px;"><strong>Anggaran Bulanan</strong><span>&gt;</span></div>
+                    <div class="flex-between">
+                        <div style="width: 80px; height: 80px; border: 8px solid #e5e5e5; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #888;">--</div>
+                        <div style="flex-grow: 1; margin-left: 20px;">
+                            <div class="flex-between" style="margin-bottom: 8px; font-size: 14px;"><span>Tersisa :</span><strong id="anggaran-tersisa">0</strong></div>
+                            <div class="flex-between" style="margin-bottom: 8px; font-size: 14px;"><span>Anggaran :</span><strong>0</strong></div>
+                            <div class="flex-between" style="font-size: 14px;"><span>Pengeluaran :</span><strong id="anggaran-out" class="text-red">0</strong></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -153,11 +179,12 @@
         </div>
     </div>
 
-    <!-- MODAL TRANSAKSI -->
+    <!-- MODAL TRANSAKSI (TAMBAH / EDIT) -->
     <div class="modal" id="modalTx">
         <div class="modal-content">
-            <h3 style="margin-top:0;">Tambah Transaksi</h3>
+            <h3 style="margin-top:0;" id="modal-tx-title">Tambah Transaksi</h3>
             <form id="formTx">
+                <input type="hidden" id="tx-id">
                 <select id="tx-type" onchange="populateCategories()">
                     <option value="expense">Pengeluaran</option>
                     <option value="income">Pemasukan</option>
@@ -186,7 +213,6 @@
     </div>
 
     <script>
-        // URL Web App Google Apps Script Anda sudah terpasang di sini
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbz7f2VewwwWDyX5YJoDLcAH_0TdjRGWFayrHBxa3Io5D6Why5eb80QuGBXI2zVsJwKOLQ/exec';
 
         let CURRENT_USER = null;
@@ -194,11 +220,13 @@
         let APP_DATA = { transactions: [], categories: [], account: {} };
         let chartInstance = null;
         let activeGType = 'expense', activeGPeriod = 'month';
+        let activeLPeriod = 'month';
 
         const today = new Date();
         const currentMonthVal = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
         document.getElementById('filter-month').value = currentMonthVal;
         document.getElementById('g-filter-month').value = currentMonthVal;
+        document.getElementById('l-filter-month').value = currentMonthVal;
         document.getElementById('tx-date').value = today.toISOString().split('T')[0];
 
         window.onload = function() {
@@ -299,6 +327,15 @@
             }
         }
 
+        function setLaporanPeriod(period) {
+            activeLPeriod = period;
+            document.getElementById('l-per-month').className = period === 'month' ? 'active' : '';
+            document.getElementById('l-per-year').className = period === 'year' ? 'active' : '';
+            document.getElementById('l-filter-month').style.display = period === 'month' ? 'block' : 'none';
+            document.getElementById('l-filter-year').style.display = period === 'year' ? 'block' : 'none';
+            renderLaporan();
+        }
+
         function getFilteredTx(periodType, periodValue, txType = null) {
             return APP_DATA.transactions.filter(tx => {
                 const matchDate = periodType === 'month' ? tx.date.startsWith(periodValue) : tx.date.startsWith(periodValue.toString());
@@ -317,13 +354,19 @@
             data.forEach(tx => {
                 const isInc = tx.type === 'income';
                 container.innerHTML += `
-                    <div class="card flex-between">
-                        <div>
-                            <div style="font-weight:bold;">${tx.desc}</div>
-                            <div style="font-size:12px; color:#666;">${tx.category} | ${tx.date}</div>
+                    <div class="card">
+                        <div class="flex-between">
+                            <div>
+                                <div style="font-weight:bold;">${tx.desc}</div>
+                                <div style="font-size:12px; color:#666;">${tx.category} | ${tx.date}</div>
+                            </div>
+                            <div class="${isInc ? 'text-green' : 'text-red'}" style="font-weight:bold;">
+                                ${isInc ? '+' : '-'}${formatRp(tx.amount)}
+                            </div>
                         </div>
-                        <div class="${isInc ? 'text-green' : 'text-red'}" style="font-weight:bold;">
-                            ${isInc ? '+' : '-'}${formatRp(tx.amount)}
+                        <div class="tx-actions">
+                            <button class="btn-edit" onclick="openEditTxModal('${tx.id}')">Edit</button>
+                            <button class="btn-del" onclick="hapusTransaksi('${tx.id}')">Hapus</button>
                         </div>
                     </div>`;
             });
@@ -358,17 +401,20 @@
         }
 
         function renderLaporan() {
-            const val = document.getElementById('filter-month').value;
-            const data = getFilteredTx('month', val);
+            const val = activeLPeriod === 'month' ? document.getElementById('l-filter-month').value : document.getElementById('l-filter-year').value;
+            const data = getFilteredTx(activeLPeriod, val);
             let inc = 0, exp = 0;
             data.forEach(tx => tx.type === 'income' ? inc += tx.amount : exp += tx.amount);
             let net = inc - exp;
 
-            document.getElementById('stat-bln').innerText = val ? val.split('-')[1] : 'Bln';
+            document.getElementById('stat-bln').innerText = activeLPeriod === 'month' ? (val ? val.split('-')[1] : 'Bln') : val;
             document.getElementById('stat-in').innerText = formatRp(inc);
             document.getElementById('stat-out').innerText = formatRp(exp);
             document.getElementById('stat-net').innerText = formatRp(net);
             document.getElementById('stat-net').className = net < 0 ? 'text-red' : 'text-green';
+
+            document.getElementById('anggaran-out').innerText = formatRp(exp);
+            document.getElementById('anggaran-tersisa').innerText = formatRp(-exp);
         }
 
         function renderRekeningTab() {
@@ -388,7 +434,29 @@
             cont.innerHTML = APP_DATA.categories.map(c => `<div class="cat-list-item"><span>${c.name}</span><span style="font-size:12px;color:#888;">${c.type}</span></div>`).join('');
         }
 
-        function openTxModal() { populateCategories(); document.getElementById('modalTx').style.display = 'flex'; }
+        function openTxModal() { 
+            document.getElementById('modal-tx-title').innerText = "Tambah Transaksi";
+            document.getElementById('formTx').reset();
+            document.getElementById('tx-id').value = "";
+            document.getElementById('tx-date').value = today.toISOString().split('T')[0];
+            populateCategories(); 
+            document.getElementById('modalTx').style.display = 'flex'; 
+        }
+
+        function openEditTxModal(id) {
+            const tx = APP_DATA.transactions.find(t => t.id === id);
+            if(!tx) return;
+            document.getElementById('modal-tx-title').innerText = "Edit Transaksi";
+            document.getElementById('tx-id').value = tx.id;
+            document.getElementById('tx-type').value = tx.type;
+            populateCategories();
+            document.getElementById('tx-cat').value = tx.category;
+            document.getElementById('tx-desc').value = tx.desc;
+            document.getElementById('tx-amount').value = tx.amount;
+            document.getElementById('tx-date').value = tx.date;
+            document.getElementById('modalTx').style.display = 'flex';
+        }
+
         function populateCategories() {
             const type = document.getElementById('tx-type').value;
             const select = document.getElementById('tx-cat');
@@ -399,8 +467,12 @@
         document.getElementById('formTx').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btn-tx'); btn.innerText = 'Menyimpan...'; btn.disabled = true;
+            const txId = document.getElementById('tx-id').value;
+            const actionType = txId ? 'editTransaksi' : 'simpanTransaksi';
+
             const res = await callAPI({
-                action: 'simpanTransaksi', userId: CURRENT_USER, type: document.getElementById('tx-type').value,
+                action: actionType, userId: CURRENT_USER, id: txId,
+                type: document.getElementById('tx-type').value,
                 category: document.getElementById('tx-cat').value, desc: document.getElementById('tx-desc').value,
                 amount: document.getElementById('tx-amount').value, date: document.getElementById('tx-date').value
             });
@@ -408,6 +480,12 @@
             if(res.success) { document.getElementById('modalTx').style.display='none'; document.getElementById('formTx').reset(); initApp(); } 
             else alert("Error: " + res.message);
         });
+
+        async function hapusTransaksi(id) {
+            if(!confirm("Yakin ingin menghapus transaksi ini?")) return;
+            const res = await callAPI({ action: 'hapusTransaksi', userId: CURRENT_USER, id: id });
+            if(res.success) { initApp(); } else { alert("Gagal menghapus: " + res.message); }
+        }
 
         document.getElementById('formRekening').addEventListener('submit', async (e) => {
             e.preventDefault();
