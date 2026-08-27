@@ -1,6 +1,6 @@
 self.addEventListener('install', (e) => {
   e.waitUntil(
-    caches.open('catat-uang-v1').then((cache) => {
+    caches.open('catat-uang-v2').then((cache) => {
       return cache.addAll(['./index.html', './manifest.json']);
     })
   );
