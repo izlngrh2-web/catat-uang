@@ -738,7 +738,7 @@
 
         function populateAccounts() {
             const select = document.getElementById('tx-account');
-            select.innerHTML = '<option value="">Pilih Rekening / Dompet...</option>' + APP_DATA.accounts.link(acc => `<option value="${acc.id}">${acc.bank} (${acc.name})</option>`).join('') || APP_DATA.accounts.map(acc => `<option value="${acc.id}">${acc.bank} (${acc.name})</option>`).join('');
+            select.innerHTML = '<option value="">Pilih Rekening / Dompet...</option>' + APP_DATA.accounts.map(acc => `<option value="${acc.id}">${acc.bank} (${acc.name})</option>`).join('');
         }
 
         document.getElementById('formTx').addEventListener('submit', async (e) => {
