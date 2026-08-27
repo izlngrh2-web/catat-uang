@@ -287,6 +287,15 @@
         </div>
     </div>
 
+    <!-- MODAL PERINGATAN ANGGARAN -->
+    <div class="modal" id="modalBudgetAlert">
+        <div class="modal-content" style="text-align: center; max-width: 320px;">
+            <div id="budget-alert-icon" style="font-size: 36px; margin-bottom: 10px;">⚠️</div>
+            <p id="budget-alert-text" style="font-size: 15px; margin-bottom: 20px; font-weight: 600; line-height: 1.4;"></p>
+            <button type="button" class="btn" style="background: var(--primary); margin-bottom: 0;" onclick="closeBudgetAlert()">Mengerti</button>
+        </div>
+    </div>
+
     <script>
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbz7f2VewwwWDyX5YJoDLcAH_0TdjRGWFayrHBxa3Io5D6Why5eb80QuGBXI2zVsJwKOLQ/exec';
 
@@ -342,6 +351,10 @@
 
         function closeCustomAlert() {
             document.getElementById('modalCustomAlert').style.display = 'none';
+        }
+
+        function closeBudgetAlert() {
+            document.getElementById('modalBudgetAlert').style.display = 'none';
         }
 
         async function callAPI(payload) {
@@ -401,6 +414,38 @@
                 renderCategorySettings();
                 renderLaporan();
                 loadTargetAnggaran();
+                
+                const currentVal = document.getElementById('filter-month').value;
+                checkBudgetWarning(currentVal);
+            }
+        }
+
+        function checkBudgetWarning(currentMonth) {
+            const targetAnggaran = APP_DATA.targetAnggaran || 0;
+            if (targetAnggaran <= 0) return;
+
+            const dataBulanIni = getFilteredTx('month', currentMonth, 'expense');
+            let totalPengeluaranNonTabungan = 0;
+
+            dataBulanIni.forEach(tx => {
+                if (!tx.category.toLowerCase().includes('tabungan')) {
+                    totalPengeluaranNonTabungan += tx.amount;
+                }
+            });
+
+            const persentase = (totalPengeluaranNonTabungan / targetAnggaran) * 100;
+            const alertModal = document.getElementById('modalBudgetAlert');
+            const alertText = document.getElementById('budget-alert-text');
+            const alertIcon = document.getElementById('budget-alert-icon');
+
+            if (totalPengeluaranNonTabungan > targetAnggaran) {
+                alertIcon.innerText = "🚨";
+                alertText.innerText = `Peringatan! Pengeluaran bulan ini sudah melebihi anggaran bulanan (Rp ${formatRp(totalPengeluaranNonTabungan)} dari target Rp ${formatRp(targetAnggaran)}).`;
+                alertModal.style.display = 'flex';
+            } else if (persentase >= 90) {
+                alertIcon.innerText = "⚠️";
+                alertText.innerText = `Perhatian! Pengeluaran bulan ini sudah mencapai ${Math.round(persentase)}% dan hampir mendekati batas anggaran bulanan.`;
+                alertModal.style.display = 'flex';
             }
         }
 
@@ -513,8 +558,18 @@
         function renderLaporan() {
             const val = activeLPeriod === 'month' ? document.getElementById('l-filter-month').value : document.getElementById('l-filter-year').value;
             const data = getFilteredTx(activeLPeriod, val);
-            let inc = 0, exp = 0;
-            data.forEach(tx => tx.type === 'income' ? inc += tx.amount : exp += tx.amount);
+            let inc = 0, exp = 0, expForBudget = 0;
+            
+            data.forEach(tx => {
+                if (tx.type === 'income') {
+                    inc += tx.amount;
+                } else {
+                    exp += tx.amount;
+                    if (!tx.category.toLowerCase().includes('tabungan')) {
+                        expForBudget += tx.amount;
+                    }
+                }
+            });
             let net = inc - exp;
 
             document.getElementById('stat-bln').innerText = activeLPeriod === 'month' ? (val ? val.split('-')[1] : 'Bln') : val;
@@ -524,10 +579,10 @@
             document.getElementById('stat-net').className = net < 0 ? 'text-red' : 'text-green';
 
             const targetAnggaran = APP_DATA.targetAnggaran || 0;
-            const sisaAnggaran = targetAnggaran - exp;
-            const persentase = targetAnggaran > 0 ? Math.round((exp / targetAnggaran) * 100) : 0;
+            const sisaAnggaran = targetAnggaran - expForBudget;
+            const persentase = targetAnggaran > 0 ? Math.round((expForBudget / targetAnggaran) * 100) : 0;
 
-            document.getElementById('anggaran-out').innerText = formatRp(exp);
+            document.getElementById('anggaran-out').innerText = formatRp(expForBudget);
             document.getElementById('anggaran-limit').innerText = formatRp(targetAnggaran);
             document.getElementById('anggaran-tersisa').innerText = formatRp(sisaAnggaran);
             document.getElementById('anggaran-tersisa').className = sisaAnggaran < 0 ? 'text-red' : 'text-green';
@@ -683,7 +738,7 @@
 
         function populateAccounts() {
             const select = document.getElementById('tx-account');
-            select.innerHTML = '<option value="">Pilih Rekening / Dompet...</option>' + APP_DATA.accounts.map(acc => `<option value="${acc.id}">${acc.bank} (${acc.name})</option>`).join('');
+            select.innerHTML = '<option value="">Pilih Rekening / Dompet...</option>' + APP_DATA.accounts.link(acc => `<option value="${acc.id}">${acc.bank} (${acc.name})</option>`).join('') || APP_DATA.accounts.map(acc => `<option value="${acc.id}">${acc.bank} (${acc.name})</option>`).join('');
         }
 
         document.getElementById('formTx').addEventListener('submit', async (e) => {
@@ -700,8 +755,16 @@
                 amount: document.getElementById('tx-amount').value, date: document.getElementById('tx-date').value
             });
             btn.innerText = 'Simpan'; btn.disabled = false;
-            if(res.success) { document.getElementById('modalTx').style.display='none'; document.getElementById('formTx').reset(); initApp(); } 
-            else showAlert("Error: " + res.message);
+            if(res.success) { 
+                document.getElementById('modalTx').style.display='none'; 
+                document.getElementById('formTx').reset(); 
+                initApp(); 
+                
+                const txDateVal = document.getElementById('tx-date').value.substring(0, 7);
+                checkBudgetWarning(txDateVal);
+            } else {
+                showAlert("Error: " + res.message);
+            }
         });
 
         async function hapusTransaksi(id) {
