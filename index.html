@@ -287,10 +287,10 @@
         </div>
     </div>
 
-    <!-- MODAL PERINGATAN ANGGARAN -->
-    <div class="modal" id="modalBudgetAlert">
+    <!-- MODAL PERINGATAN ANGGARAN (TIDAK BISA DITUTUP KECUALI KLIK MENGERTI) -->
+    <div class="modal" id="modalBudgetAlert" style="background: rgba(15, 23, 42, 0.85);">
         <div class="modal-content" style="text-align: center; max-width: 320px;">
-            <div id="budget-alert-icon" style="font-size: 36px; margin-bottom: 10px;">⚠️</div>
+            <div id="budget-alert-icon" style="font-size: 38px; margin-bottom: 10px;">⚠️</div>
             <p id="budget-alert-text" style="font-size: 15px; margin-bottom: 20px; font-weight: 600; line-height: 1.4;"></p>
             <button type="button" class="btn" style="background: var(--primary); margin-bottom: 0;" onclick="closeBudgetAlert()">Mengerti</button>
         </div>
@@ -607,6 +607,9 @@
                 APP_DATA.targetAnggaran = parseFloat(target) || 0;
                 showAlert("Target anggaran bulanan berhasil disimpan ke database!");
                 renderLaporan();
+                
+                const currentVal = document.getElementById('filter-month').value;
+                checkBudgetWarning(currentVal);
             } else {
                 showAlert("Gagal menyimpan anggaran: " + res.message);
             }
@@ -758,9 +761,13 @@
             if(res.success) { 
                 document.getElementById('modalTx').style.display='none'; 
                 document.getElementById('formTx').reset(); 
-                initApp(); 
                 
+                // Ambil tanggal transaksi untuk pengecekan anggaran bulan tersebut
                 const txDateVal = document.getElementById('tx-date').value.substring(0, 7);
+                
+                await initApp(); 
+                
+                // Pastikan pop-up anggaran langsung muncul kembali jika transaksi baru ini berjenis pengeluaran dan memicu batas anggaran
                 checkBudgetWarning(txDateVal);
             } else {
                 showAlert("Error: " + res.message);
@@ -770,7 +777,13 @@
         async function hapusTransaksi(id) {
             showConfirm("Yakin ingin menghapus transaksi ini?", async function() {
                 const res = await callAPI({ action: 'hapusTransaksi', userId: CURRENT_USER, id: id });
-                if(res.success) { initApp(); } else { showAlert("Gagal menghapus: " + res.message); }
+                if(res.success) { 
+                    await initApp(); 
+                    const currentVal = document.getElementById('filter-month').value;
+                    checkBudgetWarning(currentVal);
+                } else { 
+                    showAlert("Gagal menghapus: " + res.message); 
+                }
             });
         }
 
