@@ -43,9 +43,8 @@
         
         .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 200; }
         .modal-content { background: white; padding: 20px; border-radius: 8px; width: 85%; max-height: 90vh; overflow-y: auto; }
-        .cat-list-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
+        .cat-list-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; align-items: center; }
         
-        /* Style Tambahan untuk Tombol Aksi Riwayat */
         .tx-actions { display: flex; gap: 8px; margin-top: 8px; }
         .tx-actions button { padding: 4px 10px; font-size: 11px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .btn-edit { background: #3b82f6; color: white; }
@@ -98,7 +97,6 @@
         </div>
 
         <div id="view-laporan" class="view-section">
-            <!-- Pilihan Periode Laporan: Bulanan / Tahunan -->
             <div class="sub-nav">
                 <div id="l-per-month" class="active" onclick="setLaporanPeriod('month')">Bulanan</div>
                 <div id="l-per-year" onclick="setLaporanPeriod('year')">Tahunan</div>
@@ -128,10 +126,12 @@
                 <div class="card">
                     <div class="flex-between" style="margin-bottom: 15px;"><strong>Anggaran Bulanan</strong><span>&gt;</span></div>
                     <div class="flex-between">
-                        <div style="width: 80px; height: 80px; border: 8px solid #e5e5e5; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #888;">--</div>
+                        <div id="anggaran-circle" style="width: 80px; height: 80px; border: 8px solid #e5e5e5; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #888; font-size: 13px;">
+                            0%
+                        </div>
                         <div style="flex-grow: 1; margin-left: 20px;">
                             <div class="flex-between" style="margin-bottom: 8px; font-size: 14px;"><span>Tersisa :</span><strong id="anggaran-tersisa">0</strong></div>
-                            <div class="flex-between" style="margin-bottom: 8px; font-size: 14px;"><span>Anggaran :</span><strong>0</strong></div>
+                            <div class="flex-between" style="margin-bottom: 8px; font-size: 14px;"><span>Anggaran :</span><strong id="anggaran-limit">0</strong></div>
                             <div class="flex-between" style="font-size: 14px;"><span>Pengeluaran :</span><strong id="anggaran-out" class="text-red">0</strong></div>
                         </div>
                     </div>
@@ -140,24 +140,30 @@
 
             <div id="sub-laporan-rekening" style="display: none;">
                 <div class="card">
-                    <h3>Total Saldo Rekening</h3>
+                    <h3>Total Seluruh Saldo</h3>
                     <h2 id="rek-total-saldo" style="color: #2563eb; margin: 5px 0;">Rp 0</h2>
-                    <p style="font-size: 13px; color: #666;" id="rek-info-detail">Bank: - | No: -</p>
                 </div>
+                <div id="list-laporan-rekening"></div>
             </div>
         </div>
 
         <div id="view-saya" class="view-section">
             <div class="card">
-                <h3>Informasi Rekening</h3>
-                <form id="formRekening">
-                    <input type="text" id="rek-bank" placeholder="Nama Bank">
-                    <input type="text" id="rek-name" placeholder="Atas Nama">
-                    <input type="text" id="rek-no" placeholder="Nomor Rekening">
-                    <input type="number" id="rek-bal" placeholder="Saldo Awal (Rp)">
-                    <button type="submit" class="btn" id="btn-rek">Simpan Rekening</button>
+                <h3>Target Anggaran Bulanan</h3>
+                <form id="formAnggaran">
+                    <input type="number" id="input-target-anggaran" placeholder="Masukkan Target Anggaran (Rp)" required>
+                    <button type="submit" class="btn">Simpan Target Anggaran</button>
                 </form>
             </div>
+            
+            <div class="card">
+                <div class="flex-between">
+                    <h3>Kelola Rekening / Dompet</h3>
+                    <button class="btn" style="width:auto; padding:5px 10px;" onclick="openRekModal()">+ Tambah</button>
+                </div>
+                <div id="list-rekening-setting"></div>
+            </div>
+
             <div class="card">
                 <div class="flex-between">
                     <h3>Kategori</h3>
@@ -167,7 +173,6 @@
             </div>
         </div>
 
-        <!-- BOTTOM NAV DENGAN TOMBOL TENGAH -->
         <div class="bottom-nav" style="position: fixed; bottom: 0; width: 100%;">
             <div class="nav-item active" onclick="switchTab('riwayat', this)"><span class="nav-icon">📝</span>Riwayat</div>
             <div class="nav-item" onclick="switchTab('grafik', this)"><span class="nav-icon">📊</span>Grafik</div>
@@ -179,7 +184,7 @@
         </div>
     </div>
 
-    <!-- MODAL TRANSAKSI (TAMBAH / EDIT) -->
+    <!-- MODAL TRANSAKSI -->
     <div class="modal" id="modalTx">
         <div class="modal-content">
             <h3 style="margin-top:0;" id="modal-tx-title">Tambah Transaksi</h3>
@@ -189,12 +194,29 @@
                     <option value="expense">Pengeluaran</option>
                     <option value="income">Pemasukan</option>
                 </select>
+                <select id="tx-account" required><option value="">Pilih Rekening / Dompet...</option></select>
                 <select id="tx-cat" required><option value="">Pilih Kategori...</option></select>
                 <input type="text" id="tx-desc" placeholder="Keterangan..." required>
                 <input type="number" id="tx-amount" placeholder="Nominal (Rp)" required>
                 <input type="date" id="tx-date" required>
                 <button type="submit" class="btn" id="btn-tx">Simpan</button>
                 <button type="button" class="btn" style="background:#ddd; margin-top:10px;" onclick="document.getElementById('modalTx').style.display='none'">Batal</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL REKENING -->
+    <div class="modal" id="modalRek">
+        <div class="modal-content">
+            <h3 style="margin-top:0;" id="modal-rek-title">Tambah Rekening</h3>
+            <form id="formRekening">
+                <input type="hidden" id="rek-id">
+                <input type="text" id="rek-bank" placeholder="Nama Bank / Dompet (Cth: BCA, OVO)" required>
+                <input type="text" id="rek-name" placeholder="Atas Nama" required>
+                <input type="text" id="rek-no" placeholder="Nomor Rekening / No HP" required>
+                <input type="number" id="rek-bal" placeholder="Saldo Awal (Rp)" required>
+                <button type="submit" class="btn" id="btn-rek-save">Simpan Rekening</button>
+                <button type="button" class="btn" style="background:#ddd; margin-top:10px;" onclick="document.getElementById('modalRek').style.display='none'">Batal</button>
             </form>
         </div>
     </div>
@@ -217,7 +239,7 @@
 
         let CURRENT_USER = null;
         let isRegisterMode = false;
-        let APP_DATA = { transactions: [], categories: [], account: {} };
+        let APP_DATA = { transactions: [], categories: [], accounts: [] };
         let chartInstance = null;
         let activeGType = 'expense', activeGPeriod = 'month';
         let activeLPeriod = 'month';
@@ -230,7 +252,7 @@
         document.getElementById('tx-date').value = today.toISOString().split('T')[0];
 
         window.onload = function() {
-            const savedUser = sessionStorage.getItem('auth_user_id');
+            const savedUser = localStorage.getItem('auth_user_id');
             if (savedUser) { CURRENT_USER = savedUser; showApp(); }
             
             if ('serviceWorker' in navigator) {
@@ -273,13 +295,13 @@
                 const res = await callAPI({ action: 'login', username: user, pin: pin });
                 if(res.success) {
                     CURRENT_USER = res.userId;
-                    sessionStorage.setItem('auth_user_id', CURRENT_USER);
+                    localStorage.setItem('auth_user_id', CURRENT_USER);
                     showApp();
                 } else { alert(res.message); }
             }
         });
 
-        function logout() { sessionStorage.removeItem('auth_user_id'); location.reload(); }
+        function logout() { localStorage.removeItem('auth_user_id'); location.reload(); }
         function showApp() { document.getElementById('auth-container').style.display = 'none'; document.getElementById('app-container').style.display = 'block'; initApp(); }
 
         const formatRp = (angka) => new Intl.NumberFormat('id-ID').format(angka);
@@ -290,9 +312,11 @@
                 APP_DATA = res;
                 renderRiwayat();
                 populateCategories();
-                fillRekeningForm();
+                populateAccounts();
+                renderAccountSettings();
                 renderCategorySettings();
                 renderLaporan();
+                loadTargetAnggaran();
             }
         }
 
@@ -353,12 +377,14 @@
 
             data.forEach(tx => {
                 const isInc = tx.type === 'income';
+                const acc = APP_DATA.accounts.find(a => a.id === tx.accountId);
+                const accName = acc ? acc.bank : 'Dompet Utama';
                 container.innerHTML += `
                     <div class="card">
                         <div class="flex-between">
                             <div>
                                 <div style="font-weight:bold;">${tx.desc}</div>
-                                <div style="font-size:12px; color:#666;">${tx.category} | ${tx.date}</div>
+                                <div style="font-size:12px; color:#666;">${tx.category} • [${accName}] | ${tx.date}</div>
                             </div>
                             <div class="${isInc ? 'text-green' : 'text-red'}" style="font-weight:bold;">
                                 ${isInc ? '+' : '-'}${formatRp(tx.amount)}
@@ -413,25 +439,91 @@
             document.getElementById('stat-net').innerText = formatRp(net);
             document.getElementById('stat-net').className = net < 0 ? 'text-red' : 'text-green';
 
+            const targetAnggaran = parseFloat(localStorage.getItem('target_anggaran_' + CURRENT_USER)) || 0;
+            const sisaAnggaran = targetAnggaran - exp;
+            const persentase = targetAnggaran > 0 ? Math.round((exp / targetAnggaran) * 100) : 0;
+
             document.getElementById('anggaran-out').innerText = formatRp(exp);
-            document.getElementById('anggaran-tersisa').innerText = formatRp(-exp);
+            document.getElementById('anggaran-limit').innerText = formatRp(targetAnggaran);
+            document.getElementById('anggaran-tersisa').innerText = formatRp(sisaAnggaran);
+            document.getElementById('anggaran-tersisa').className = sisaAnggaran < 0 ? 'text-red' : 'text-green';
+            document.getElementById('anggaran-circle').innerText = persentase + '%';
         }
+
+        function loadTargetAnggaran() {
+            const savedTarget = localStorage.getItem('target_anggaran_' + CURRENT_USER) || '';
+            document.getElementById('input-target-anggaran').value = savedTarget;
+        }
+
+        document.getElementById('formAnggaran').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const target = document.getElementById('input-target-anggaran').value;
+            localStorage.setItem('target_anggaran_' + CURRENT_USER, target);
+            alert("Target anggaran bulanan berhasil disimpan!");
+            renderLaporan();
+        });
 
         function renderRekeningTab() {
-            document.getElementById('rek-total-saldo').innerText = 'Rp ' + formatRp(APP_DATA.account.balance || 0);
-            document.getElementById('rek-info-detail').innerText = `Bank: ${APP_DATA.account.bank || '-'} | No: ${APP_DATA.account.number || '-'}`;
+            let totalSaldo = 0;
+            const container = document.getElementById('list-laporan-rekening');
+            container.innerHTML = '';
+
+            if (APP_DATA.accounts.length === 0) {
+                container.innerHTML = '<div class="card"><p style="text-align:center;">Belum ada rekening/dompet terdaftar.</p></div>';
+            }
+
+            APP_DATA.accounts.forEach(acc => {
+                totalSaldo += acc.balance;
+                container.innerHTML += `
+                    <div class="card flex-between">
+                        <div>
+                            <strong style="font-size:16px;">${acc.bank}</strong>
+                            <div style="font-size:12px; color:#666;">${acc.name} • ${acc.number}</div>
+                        </div>
+                        <div style="font-weight:bold; color:#2563eb;">Rp ${formatRp(acc.balance)}</div>
+                    </div>`;
+            });
+
+            document.getElementById('rek-total-saldo').innerText = 'Rp ' + formatRp(totalSaldo);
         }
 
-        function fillRekeningForm() {
-            document.getElementById('rek-bank').value = APP_DATA.account.bank;
-            document.getElementById('rek-name').value = APP_DATA.account.name;
-            document.getElementById('rek-no').value = APP_DATA.account.number;
-            document.getElementById('rek-bal').value = APP_DATA.account.balance;
+        function renderAccountSettings() {
+            const cont = document.getElementById('list-rekening-setting');
+            cont.innerHTML = APP_DATA.accounts.map(acc => `
+                <div class="cat-list-item">
+                    <div>
+                        <strong>${acc.bank}</strong> (${acc.number})<br>
+                        <span style="font-size:12px; color:#666;">Saldo: Rp ${formatRp(acc.balance)}</span>
+                    </div>
+                    <div>
+                        <button class="btn-edit" onclick="openEditRekModal('${acc.id}')">Edit</button>
+                        <button class="btn-del" onclick="hapusRekening('${acc.id}')">Hapus</button>
+                    </div>
+                </div>`).join('') || '<p style="text-align:center;">Belum ada rekening.</p>';
         }
 
         function renderCategorySettings() {
             const cont = document.getElementById('list-kategori-setting');
             cont.innerHTML = APP_DATA.categories.map(c => `<div class="cat-list-item"><span>${c.name}</span><span style="font-size:12px;color:#888;">${c.type}</span></div>`).join('');
+        }
+
+        function openRekModal() {
+            document.getElementById('modal-rek-title').innerText = "Tambah Rekening";
+            document.getElementById('formRekening').reset();
+            document.getElementById('rek-id').value = "";
+            document.getElementById('modalRek').style.display = 'flex';
+        }
+
+        function openEditRekModal(id) {
+            const acc = APP_DATA.accounts.find(a => a.id === id);
+            if(!acc) return;
+            document.getElementById('modal-rek-title').innerText = "Edit Rekening";
+            document.getElementById('rek-id').value = acc.id;
+            document.getElementById('rek-bank').value = acc.bank;
+            document.getElementById('rek-name').value = acc.name;
+            document.getElementById('rek-no').value = acc.number;
+            document.getElementById('rek-bal').value = acc.balance;
+            document.getElementById('modalRek').style.display = 'flex';
         }
 
         function openTxModal() { 
@@ -440,6 +532,7 @@
             document.getElementById('tx-id').value = "";
             document.getElementById('tx-date').value = today.toISOString().split('T')[0];
             populateCategories(); 
+            populateAccounts();
             document.getElementById('modalTx').style.display = 'flex'; 
         }
 
@@ -450,6 +543,8 @@
             document.getElementById('tx-id').value = tx.id;
             document.getElementById('tx-type').value = tx.type;
             populateCategories();
+            populateAccounts();
+            document.getElementById('tx-account').value = tx.accountId;
             document.getElementById('tx-cat').value = tx.category;
             document.getElementById('tx-desc').value = tx.desc;
             document.getElementById('tx-amount').value = tx.amount;
@@ -464,6 +559,11 @@
             select.innerHTML = '<option value="">Pilih Kategori...</option>' + filteredCats.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
         }
 
+        function populateAccounts() {
+            const select = document.getElementById('tx-account');
+            select.innerHTML = '<option value="">Pilih Rekening / Dompet...</option>' + APP_DATA.accounts.map(acc => `<option value="${acc.id}">${acc.bank} (${acc.name})</option>`).join('');
+        }
+
         document.getElementById('formTx').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btn-tx'); btn.innerText = 'Menyimpan...'; btn.disabled = true;
@@ -473,6 +573,7 @@
             const res = await callAPI({
                 action: actionType, userId: CURRENT_USER, id: txId,
                 type: document.getElementById('tx-type').value,
+                accountId: document.getElementById('tx-account').value,
                 category: document.getElementById('tx-cat').value, desc: document.getElementById('tx-desc').value,
                 amount: document.getElementById('tx-amount').value, date: document.getElementById('tx-date').value
             });
@@ -489,14 +590,25 @@
 
         document.getElementById('formRekening').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const btn = document.getElementById('btn-rek'); btn.innerText = 'Menyimpan...'; btn.disabled = true;
+            const btn = document.getElementById('btn-rek-save'); btn.innerText = 'Menyimpan...'; btn.disabled = true;
+            const rekId = document.getElementById('rek-id').value;
+            const actionType = rekId ? 'editRekening' : 'simpanRekening';
+
             const res = await callAPI({
-                action: 'simpanRekening', userId: CURRENT_USER, bank: document.getElementById('rek-bank').value,
-                name: document.getElementById('rek-name').value, number: document.getElementById('rek-no').value, balance: document.getElementById('rek-bal').value
+                action: actionType, userId: CURRENT_USER, id: rekId,
+                bank: document.getElementById('rek-bank').value, name: document.getElementById('rek-name').value,
+                number: document.getElementById('rek-no').value, balance: document.getElementById('rek-bal').value
             });
             btn.innerText = 'Simpan Rekening'; btn.disabled = false;
-            if(res.success) { alert("Rekening tersimpan & terenkripsi!"); initApp(); } else alert("Error");
+            if(res.success) { document.getElementById('modalRek').style.display='none'; document.getElementById('formRekening').reset(); initApp(); } 
+            else alert("Error: " + res.message);
         });
+
+        async function hapusRekening(id) {
+            if(!confirm("Yakin ingin menghapus rekening ini?")) return;
+            const res = await callAPI({ action: 'hapusRekening', userId: CURRENT_USER, id: id });
+            if(res.success) { initApp(); } else { alert("Gagal menghapus: " + res.message); }
+        }
 
         document.getElementById('formCat').addEventListener('submit', async (e) => {
             e.preventDefault();
