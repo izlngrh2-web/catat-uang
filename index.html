@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catat Uang</title>
+    <!-- PWA Config -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#F6C122">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: sans-serif; margin: 0; background: #F5F5F5; color: #333; }
+        #auth-container { display: flex; justify-content: center; align-items: center; height: 100vh; background: #F6C122; padding: 20px; box-sizing: border-box; }
+        .auth-card { background: white; padding: 25px; border-radius: 12px; width: 100%; max-width: 350px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); text-align: center; }
+        .auth-card h2 { margin-top: 0; }
+        .toggle-auth { color: #2563eb; cursor: pointer; font-size: 14px; margin-top: 15px; display: inline-block; }
+        
+        #app-container { display: none; padding-bottom: 70px; }
+        .header { background: #F6C122; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .header h2 { margin: 0; font-size: 18px; }
+        .view-section { display: none; padding: 15px; }
+        .view-section.active { display: block; }
+        
+        .card { background: white; padding: 15px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        .text-red { color: #dc2626; } .text-green { color: #16a34a; }
+        
+        .sub-nav { display: flex; background: #e5e5e5; border-radius: 8px; margin-bottom: 15px; overflow: hidden; }
+        .sub-nav div { flex: 1; text-align: center; padding: 8px; cursor: pointer; font-size: 14px; }
+        .sub-nav div.active { background: #F6C122; font-weight: bold; }
+        
+        input, select { width: 100%; padding: 10px; margin-bottom: 12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+        .btn { width: 100%; padding: 12px; background: #F6C122; border: none; font-weight: bold; border-radius: 6px; cursor: pointer; }
+        
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; border-top: 1px solid #ddd; z-index: 100; height: 60px; }
+        .nav-item { flex: 1; text-align: center; padding-top: 8px; font-size: 12px; color: #666; cursor: pointer; }
+        .nav-item.active { color: #F6C122; font-weight: bold; }
+        .nav-icon { font-size: 20px; display: block; margin-bottom: 2px; }
+        
+        .fab-center { position: absolute; left: 50%; transform: translateX(-50%); top: -22px; background: #F6C122; width: 52px; height: 52px; border-radius: 50%; font-size: 28px; border: 4px solid #F5F5F5; box-shadow: 0 4px 6px rgba(0,0,0,0.15); z-index: 101; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        
+        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 200; }
+        .modal-content { background: white; padding: 20px; border-radius: 8px; width: 85%; max-height: 90vh; overflow-y: auto; }
+        .cat-list-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
+    </style>
+</head>
+<body>
+
+    <div id="auth-container">
+        <div class="auth-card">
+            <h2 id="auth-title">Catat Uang</h2>
+            <form id="formAuth">
+                <input type="text" id="auth-name" placeholder="Nama Lengkap" style="display:none;">
+                <input type="text" id="auth-user" placeholder="Username" required>
+                <input type="password" id="auth-pin" placeholder="PIN / Password" required>
+                <button type="submit" class="btn" id="btn-auth">Masuk</button>
+            </form>
+            <span class="toggle-auth" onclick="toggleAuthMode()" id="auth-toggle-text">Belum punya akun? Daftar di sini</span>
+        </div>
+    </div>
+
+    <div id="app-container">
+        <div class="header">
+            <h2 id="header-title">Riwayat Transaksi</h2>
+            <button onclick="logout()" style="position:absolute; right:15px; top:15px; background:none; border:none; font-weight:bold; cursor:pointer; color:#333;">Keluar</button>
+        </div>
+
+        <div id="view-riwayat" class="view-section active">
+            <input type="month" id="filter-month" onchange="renderRiwayat()">
+            <div id="list-riwayat"></div>
+        </div>
+
+        <div id="view-grafik" class="view-section">
+            <div class="sub-nav">
+                <div class="g-type active" onclick="setGrafikType('expense')">Pengeluaran</div>
+                <div class="g-type" onclick="setGrafikType('income')">Pemasukan</div>
+            </div>
+            <div class="sub-nav">
+                <div class="g-period active" onclick="setGrafikPeriod('month')">Bulanan</div>
+                <div class="g-period" onclick="setGrafikPeriod('year')">Tahunan</div>
+            </div>
+            <input type="month" id="g-filter-month" style="display:block;" onchange="renderGrafik()">
+            <input type="number" id="g-filter-year" style="display:none;" value="2026" onchange="renderGrafik()">
+            
+            <div class="card"><canvas id="myChart"></canvas></div>
+            <h3 style="font-size:16px;">Top 5 Kategori</h3>
+            <div id="list-top5" class="card"></div>
+            <h3 style="font-size:16px;">Semua Kategori</h3>
+            <div id="list-all-cat" class="card"></div>
+        </div>
+
+        <div id="view-laporan" class="view-section">
+            <div style="display: flex; background: #e5e5e5; border-radius: 8px; margin-bottom: 15px; overflow: hidden; padding: 3px;">
+                <div id="btn-sub-analisis" onclick="switchLaporanSub('analisis')" style="flex:1; text-align:center; padding:10px; cursor:pointer; font-weight:bold; background:black; color:#F6C122; border-radius:6px;">Analisis</div>
+                <div id="btn-sub-rekening" onclick="switchLaporanSub('rekening')" style="flex:1; text-align:center; padding:10px; cursor:pointer; font-weight:bold; color:#666;">Rekening</div>
+            </div>
+
+            <div id="sub-laporan-analisis">
+                <div class="card">
+                    <div class="flex-between" style="margin-bottom: 10px;"><strong>Statistik Bulanan</strong><span>&gt;</span></div>
+                    <div class="flex-between" style="font-size: 14px; color: #555;">
+                        <div>
+                            <div id="stat-bln" style="font-size: 18px; font-weight: bold; color: black; margin-bottom: 5px;">Agu</div>
+                            <span style="font-size: 12px; color: #888;">Periode Aktif</span>
+                        </div>
+                        <div style="text-align: right;"><span style="color: #888; font-size: 12px;">Pengeluaran</span><div id="stat-out" class="text-red" style="font-weight: bold;">0</div></div>
+                        <div style="text-align: right;"><span style="color: #888; font-size: 12px;">Pemasukan</span><div id="stat-in" class="text-green" style="font-weight: bold;">0</div></div>
+                        <div style="text-align: right;"><span style="color: #888; font-size: 12px;">Saldo</span><div id="stat-net" style="font-weight: bold;">0</div></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="sub-laporan-rekening" style="display: none;">
+                <div class="card">
+                    <h3>Total Saldo Rekening</h3>
+                    <h2 id="rek-total-saldo" style="color: #2563eb; margin: 5px 0;">Rp 0</h2>
+                    <p style="font-size: 13px; color: #666;" id="rek-info-detail">Bank: - | No: -</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-saya" class="view-section">
+            <div class="card">
+                <h3>Informasi Rekening</h3>
+                <form id="formRekening">
+                    <input type="text" id="rek-bank" placeholder="Nama Bank">
+                    <input type="text" id="rek-name" placeholder="Atas Nama">
+                    <input type="text" id="rek-no" placeholder="Nomor Rekening">
+                    <input type="number" id="rek-bal" placeholder="Saldo Awal (Rp)">
+                    <button type="submit" class="btn" id="btn-rek">Simpan Rekening</button>
+                </form>
+            </div>
+            <div class="card">
+                <div class="flex-between">
+                    <h3>Kategori</h3>
+                    <button class="btn" style="width:auto; padding:5px 10px;" onclick="document.getElementById('modalCat').style.display='flex'">+ Tambah</button>
+                </div>
+                <div id="list-kategori-setting"></div>
+            </div>
+        </div>
+
+        <!-- BOTTOM NAV DENGAN TOMBOL TENGAH -->
+        <div class="bottom-nav" style="position: fixed; bottom: 0; width: 100%;">
+            <div class="nav-item active" onclick="switchTab('riwayat', this)"><span class="nav-icon">📝</span>Riwayat</div>
+            <div class="nav-item" onclick="switchTab('grafik', this)"><span class="nav-icon">📊</span>Grafik</div>
+            <div style="flex: 1; position: relative;">
+                <button class="fab-center" onclick="openTxModal()">+</button>
+            </div>
+            <div class="nav-item" onclick="switchTab('laporan', this)"><span class="nav-icon">📄</span>Laporan</div>
+            <div class="nav-item" onclick="switchTab('saya', this)"><span class="nav-icon">👤</span>Saya</div>
+        </div>
+    </div>
+
+    <!-- MODAL TRANSAKSI -->
+    <div class="modal" id="modalTx">
+        <div class="modal-content">
+            <h3 style="margin-top:0;">Tambah Transaksi</h3>
+            <form id="formTx">
+                <select id="tx-type" onchange="populateCategories()">
+                    <option value="expense">Pengeluaran</option>
+                    <option value="income">Pemasukan</option>
+                </select>
+                <select id="tx-cat" required><option value="">Pilih Kategori...</option></select>
+                <input type="text" id="tx-desc" placeholder="Keterangan..." required>
+                <input type="number" id="tx-amount" placeholder="Nominal (Rp)" required>
+                <input type="date" id="tx-date" required>
+                <button type="submit" class="btn" id="btn-tx">Simpan</button>
+                <button type="button" class="btn" style="background:#ddd; margin-top:10px;" onclick="document.getElementById('modalTx').style.display='none'">Batal</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL KATEGORI -->
+    <div class="modal" id="modalCat">
+        <div class="modal-content">
+            <h3 style="margin-top:0;">Tambah Kategori</h3>
+            <form id="formCat">
+                <select id="cat-type"><option value="expense">Pengeluaran</option><option value="income">Pemasukan</option></select>
+                <input type="text" id="cat-name" placeholder="Nama Kategori" required>
+                <button type="submit" class="btn" id="btn-cat">Simpan</button>
+                <button type="button" class="btn" style="background:#ddd; margin-top:10px;" onclick="document.getElementById('modalCat').style.display='none'">Batal</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // URL Web App Google Apps Script Anda sudah terpasang di sini
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbz7f2VewwwWDyX5YJoDLcAH_0TdjRGWFayrHBxa3Io5D6Why5eb80QuGBXI2zVsJwKOLQ/exec';
+
+        let CURRENT_USER = null;
+        let isRegisterMode = false;
+        let APP_DATA = { transactions: [], categories: [], account: {} };
+        let chartInstance = null;
+        let activeGType = 'expense', activeGPeriod = 'month';
+
+        const today = new Date();
+        const currentMonthVal = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
+        document.getElementById('filter-month').value = currentMonthVal;
+        document.getElementById('g-filter-month').value = currentMonthVal;
+        document.getElementById('tx-date').value = today.toISOString().split('T')[0];
+
+        window.onload = function() {
+            const savedUser = sessionStorage.getItem('auth_user_id');
+            if (savedUser) { CURRENT_USER = savedUser; showApp(); }
+            
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('sw.js');
+            }
+        };
+
+        async function callAPI(payload) {
+            try {
+                const response = await fetch(GAS_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                return await response.json();
+            } catch (err) {
+                alert("Gagal terhubung ke server: " + err.message);
+                return { success: false };
+            }
+        }
+
+        function toggleAuthMode() {
+            isRegisterMode = !isRegisterMode;
+            document.getElementById('auth-title').innerText = isRegisterMode ? "Daftar Akun Baru" : "Catat Uang";
+            document.getElementById('btn-auth').innerText = isRegisterMode ? "Daftar" : "Masuk";
+            document.getElementById('auth-toggle-text').innerText = isRegisterMode ? "Sudah punya akun? Masuk" : "Belum punya akun? Daftar di sini";
+            document.getElementById('auth-name').style.display = isRegisterMode ? "block" : "none";
+        }
+
+        document.getElementById('formAuth').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const user = document.getElementById('auth-user').value;
+            const pin = document.getElementById('auth-pin').value;
+            const nama = document.getElementById('auth-name').value;
+
+            if (isRegisterMode) {
+                const res = await callAPI({ action: 'register', username: user, pin: pin, nama: nama });
+                if(res.success) { alert("Pendaftaran berhasil! Silakan Masuk."); toggleAuthMode(); } 
+                else { alert(res.message); }
+            } else {
+                const res = await callAPI({ action: 'login', username: user, pin: pin });
+                if(res.success) {
+                    CURRENT_USER = res.userId;
+                    sessionStorage.setItem('auth_user_id', CURRENT_USER);
+                    showApp();
+                } else { alert(res.message); }
+            }
+        });
+
+        function logout() { sessionStorage.removeItem('auth_user_id'); location.reload(); }
+        function showApp() { document.getElementById('auth-container').style.display = 'none'; document.getElementById('app-container').style.display = 'block'; initApp(); }
+
+        const formatRp = (angka) => new Intl.NumberFormat('id-ID').format(angka);
+
+        async function initApp() {
+            const res = await callAPI({ action: 'getInitData', userId: CURRENT_USER });
+            if(res.success) {
+                APP_DATA = res;
+                renderRiwayat();
+                populateCategories();
+                fillRekeningForm();
+                renderCategorySettings();
+                renderLaporan();
+            }
+        }
+
+        function switchTab(tab, el) {
+            document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(v => v.classList.remove('active'));
+            document.getElementById(`view-${tab}`).classList.add('active');
+            el.classList.add('active');
+            
+            const titles = { 'riwayat':'Riwayat Transaksi', 'grafik':'Grafik Analisis', 'laporan':'Laporan Keuangan', 'saya':'Pengaturan Akun' };
+            document.getElementById('header-title').innerText = titles[tab];
+
+            if(tab === 'grafik') renderGrafik();
+            if(tab === 'laporan') renderLaporan();
+        }
+
+        function switchLaporanSub(sub) {
+            const btnAna = document.getElementById('btn-sub-analisis');
+            const btnRek = document.getElementById('btn-sub-rekening');
+            const secAna = document.getElementById('sub-laporan-analisis');
+            const secRek = document.getElementById('sub-laporan-rekening');
+
+            if (sub === 'analisis') {
+                btnAna.style.background = 'black'; btnAna.style.color = '#F6C122';
+                btnRek.style.background = 'transparent'; btnRek.style.color = '#666';
+                secAna.style.display = 'block'; secRek.style.display = 'none';
+            } else {
+                btnRek.style.background = 'black'; btnRek.style.color = '#F6C122';
+                btnAna.style.background = 'transparent'; btnAna.style.color = '#666';
+                secRek.style.display = 'block'; secAna.style.display = 'none';
+                renderRekeningTab();
+            }
+        }
+
+        function getFilteredTx(periodType, periodValue, txType = null) {
+            return APP_DATA.transactions.filter(tx => {
+                const matchDate = periodType === 'month' ? tx.date.startsWith(periodValue) : tx.date.startsWith(periodValue.toString());
+                const matchType = txType ? tx.type === txType : true;
+                return matchDate && matchType;
+            });
+        }
+
+        function renderRiwayat() {
+            const val = document.getElementById('filter-month').value;
+            const data = getFilteredTx('month', val);
+            const container = document.getElementById('list-riwayat');
+            container.innerHTML = '';
+            if(data.length === 0) return container.innerHTML = '<p style="text-align:center;">Tidak ada transaksi.</p>';
+
+            data.forEach(tx => {
+                const isInc = tx.type === 'income';
+                container.innerHTML += `
+                    <div class="card flex-between">
+                        <div>
+                            <div style="font-weight:bold;">${tx.desc}</div>
+                            <div style="font-size:12px; color:#666;">${tx.category} | ${tx.date}</div>
+                        </div>
+                        <div class="${isInc ? 'text-green' : 'text-red'}" style="font-weight:bold;">
+                            ${isInc ? '+' : '-'}${formatRp(tx.amount)}
+                        </div>
+                    </div>`;
+            });
+        }
+
+        function setGrafikType(type) { activeGType = type; document.querySelectorAll('.g-type').forEach(e=>e.classList.remove('active')); event.target.classList.add('active'); renderGrafik(); }
+        function setGrafikPeriod(period) { 
+            activeGPeriod = period; 
+            document.querySelectorAll('.g-period').forEach(e=>e.classList.remove('active')); event.target.classList.add('active');
+            document.getElementById('g-filter-month').style.display = period === 'month' ? 'block' : 'none';
+            document.getElementById('g-filter-year').style.display = period === 'year' ? 'block' : 'none';
+            renderGrafik();
+        }
+
+        function renderGrafik() {
+            const val = activeGPeriod === 'month' ? document.getElementById('g-filter-month').value : document.getElementById('g-filter-year').value;
+            const data = getFilteredTx(activeGPeriod, val, activeGType);
+            let catSum = {};
+            data.forEach(tx => { catSum[tx.category] = (catSum[tx.category] || 0) + tx.amount; });
+            let sortedCats = Object.keys(catSum).map(k => ({ name: k, total: catSum[k] })).sort((a,b) => b.total - a.total);
+            
+            document.getElementById('list-top5').innerHTML = sortedCats.slice(0,5).map(c => `<div class="cat-list-item"><span>${c.name}</span><strong>${formatRp(c.total)}</strong></div>`).join('') || '<p>Data kosong</p>';
+            document.getElementById('list-all-cat').innerHTML = sortedCats.map(c => `<div class="cat-list-item"><span>${c.name}</span><strong>${formatRp(c.total)}</strong></div>`).join('') || '<p>Data kosong</p>';
+
+            const ctx = document.getElementById('myChart').getContext('2d');
+            if(chartInstance) chartInstance.destroy();
+            chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: { labels: sortedCats.map(c => c.name), datasets: [{ data: sortedCats.map(c => c.total), backgroundColor: ['#F6C122', '#dc2626', '#16a34a', '#3b82f6', '#8b5cf6', '#f97316', '#14b8a6'] }] },
+                options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+            });
+        }
+
+        function renderLaporan() {
+            const val = document.getElementById('filter-month').value;
+            const data = getFilteredTx('month', val);
+            let inc = 0, exp = 0;
+            data.forEach(tx => tx.type === 'income' ? inc += tx.amount : exp += tx.amount);
+            let net = inc - exp;
+
+            document.getElementById('stat-bln').innerText = val ? val.split('-')[1] : 'Bln';
+            document.getElementById('stat-in').innerText = formatRp(inc);
+            document.getElementById('stat-out').innerText = formatRp(exp);
+            document.getElementById('stat-net').innerText = formatRp(net);
+            document.getElementById('stat-net').className = net < 0 ? 'text-red' : 'text-green';
+        }
+
+        function renderRekeningTab() {
+            document.getElementById('rek-total-saldo').innerText = 'Rp ' + formatRp(APP_DATA.account.balance || 0);
+            document.getElementById('rek-info-detail').innerText = `Bank: ${APP_DATA.account.bank || '-'} | No: ${APP_DATA.account.number || '-'}`;
+        }
+
+        function fillRekeningForm() {
+            document.getElementById('rek-bank').value = APP_DATA.account.bank;
+            document.getElementById('rek-name').value = APP_DATA.account.name;
+            document.getElementById('rek-no').value = APP_DATA.account.number;
+            document.getElementById('rek-bal').value = APP_DATA.account.balance;
+        }
+
+        function renderCategorySettings() {
+            const cont = document.getElementById('list-kategori-setting');
+            cont.innerHTML = APP_DATA.categories.map(c => `<div class="cat-list-item"><span>${c.name}</span><span style="font-size:12px;color:#888;">${c.type}</span></div>`).join('');
+        }
+
+        function openTxModal() { populateCategories(); document.getElementById('modalTx').style.display = 'flex'; }
+        function populateCategories() {
+            const type = document.getElementById('tx-type').value;
+            const select = document.getElementById('tx-cat');
+            const filteredCats = APP_DATA.categories.filter(c => c.type === type);
+            select.innerHTML = '<option value="">Pilih Kategori...</option>' + filteredCats.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+        }
+
+        document.getElementById('formTx').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-tx'); btn.innerText = 'Menyimpan...'; btn.disabled = true;
+            const res = await callAPI({
+                action: 'simpanTransaksi', userId: CURRENT_USER, type: document.getElementById('tx-type').value,
+                category: document.getElementById('tx-cat').value, desc: document.getElementById('tx-desc').value,
+                amount: document.getElementById('tx-amount').value, date: document.getElementById('tx-date').value
+            });
+            btn.innerText = 'Simpan'; btn.disabled = false;
+            if(res.success) { document.getElementById('modalTx').style.display='none'; document.getElementById('formTx').reset(); initApp(); } 
+            else alert("Error: " + res.message);
+        });
+
+        document.getElementById('formRekening').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-rek'); btn.innerText = 'Menyimpan...'; btn.disabled = true;
+            const res = await callAPI({
+                action: 'simpanRekening', userId: CURRENT_USER, bank: document.getElementById('rek-bank').value,
+                name: document.getElementById('rek-name').value, number: document.getElementById('rek-no').value, balance: document.getElementById('rek-bal').value
+            });
+            btn.innerText = 'Simpan Rekening'; btn.disabled = false;
+            if(res.success) { alert("Rekening tersimpan & terenkripsi!"); initApp(); } else alert("Error");
+        });
+
+        document.getElementById('formCat').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-cat'); btn.innerText = 'Menyimpan...'; btn.disabled = true;
+            const res = await callAPI({
+                action: 'tambahKategori', userId: CURRENT_USER, type: document.getElementById('cat-type').value, name: document.getElementById('cat-name').value
+            });
+            btn.innerText = 'Simpan'; btn.disabled = false;
+            if(res.success) { document.getElementById('modalCat').style.display='none'; document.getElementById('cat-name').value=''; initApp(); }
+        });
+    </script>
+</body>
+</html>
