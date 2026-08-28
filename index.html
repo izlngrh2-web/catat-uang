@@ -944,11 +944,6 @@ showApp();
             if(res.success) {
                 APP_DATA = res;
                 renderDashboard();
-                const now = new Date();
-
-checkBudgetWarning(
-    now.getFullYear()+"-"+(now.getMonth()+1)
-);
                 renderHomeLastTransaction();
                 document.getElementById('filter-month').value =
                     new Date().toISOString().slice(0,7);
