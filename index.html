@@ -1137,44 +1137,165 @@ document.getElementById('home-account-list')
 .innerHTML = htmlRek;
 
 
-    // Transaksi terakhir
-    let txHtml = "";
+    // TRANSAKSI TERAKHIR PROFESIONAL
 
-    APP_DATA.transactions
-    .slice()
-    .reverse()
-    .slice(0,5)
-    .forEach(tx=>{
+let txHtml = "";
 
-        let warna =
-        tx.type==="income"
-        ? "text-green"
-        : "text-red";
+const iconMap = {
+    "Makanan": "🍔",
+    "Belanja": "🛒",
+    "Transportasi": "🚗",
+    "Tagihan": "📄",
+    "Hiburan": "🎮",
+    "Gaji": "💰",
+    "Bonus": "🎁",
+    "Investasi": "📈"
+};
 
 
-        txHtml += `
-        <div class="card flex-between">
+APP_DATA.transactions
+.slice()
+.reverse()
+.slice(0,5)
+.forEach(tx=>{
 
-            <div>
-                <b>${tx.desc}</b>
-                <div style="font-size:12px;color:var(--text-muted)">
-                    ${tx.date}
-                </div>
+
+    let iconMap[tx.category || ""] || "💳";
+
+    let isIncome = tx.type === "income";
+
+
+    let warna = isIncome
+    ? "text-green"
+    : "text-red";
+
+
+    let tanda = isIncome ? "+" : "-";
+
+
+    // Cari rekening
+    let rekening = APP_DATA.accounts.find(
+        a => a.id == tx.accountId
+    );
+
+
+    let namaRek = rekening
+    ? rekening.bank
+    : "-";
+
+
+    // Format tanggal
+    let tanggal = new Date(tx.date);
+
+    let hariIni = new Date();
+
+
+    let labelTanggal;
+
+
+    if(
+        tanggal.toDateString()
+        === hariIni.toDateString()
+    ){
+
+        labelTanggal = "Hari ini";
+
+    }else{
+
+        labelTanggal =
+        tanggal.toLocaleDateString(
+            "id-ID",
+            {
+                day:"2-digit",
+                month:"short",
+                year:"numeric"
+            }
+        );
+
+    }
+
+
+
+    txHtml += `
+
+    <div class="card"
+    style="
+        display:flex;
+        align-items:center;
+        gap:12px;
+        padding:14px;
+        margin-bottom:10px;
+    ">
+
+
+        <div style="
+            width:42px;
+            height:42px;
+            border-radius:14px;
+            background:${isIncome ? '#DCFCE7':'#FEE2E2'};
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:22px;
+        ">
+            ${icon}
+        </div>
+
+
+
+        <div style="
+            flex:1;
+        ">
+
+            <div style="
+                font-weight:600;
+                font-size:14px;
+            ">
+                ${tx.desc}
             </div>
 
-            <div class="${warna}" style="font-weight:700">
-                ${tx.type==="income" ? "+" : "-"}
-                ${formatRupiah(tx.amount)}
+
+            <div style="
+                font-size:12px;
+                color:var(--text-muted);
+                margin-top:4px;
+            ">
+                ${namaRek} • ${labelTanggal}
             </div>
 
         </div>
-        `;
-
-    });
 
 
-    document.getElementById('home-last-transaction')
-    .innerHTML = txHtml;
+
+        <div class="${warna}"
+        style="
+            font-weight:700;
+            font-size:14px;
+        ">
+            ${tanda}
+            ${formatRupiah(tx.amount)}
+        </div>
+
+
+    </div>
+
+    `;
+
+
+});
+
+
+document.getElementById('home-last-transaction')
+.innerHTML = txHtml ||
+`
+<div style="
+text-align:center;
+color:var(--text-muted);
+padding:20px;
+">
+Belum ada transaksi
+</div>
+`;
 
 }
 
