@@ -579,6 +579,20 @@ font-size:35px;
                 </div>
                 <div id="list-rekening-setting"></div>
             </div>
+            <div class="card">
+                <h3 style="margin-top:0;font-size:15px;font-weight:600;">
+                Backup Data
+                </h3>
+
+                <p style="font-size:12px;color:var(--text-muted)">
+                Simpan semua transaksi, rekening, kategori, dan anggaran akun ini.
+                </p>
+
+            <button class="btn" onclick="backupUserData()">
+                Backup Sekarang
+            </button>
+            </div>
+            </div>
 
             <div class="card">
                 <div class="flex-between" style="margin-bottom: 12px;">
@@ -710,7 +724,7 @@ font-size:35px;
     </div>
 
     <script>
-        alert("VERSI BARU AKTIF");
+        
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbz7f2VewwwWDyX5YJoDLcAH_0TdjRGWFayrHBxa3Io5D6Why5eb80QuGBXI2zVsJwKOLQ/exec';
 
         let CURRENT_USER = null;
@@ -2187,6 +2201,68 @@ Math.max(target-expense,0)
             btn.innerText = 'Simpan'; btn.disabled = false;
             if(res.success) { document.getElementById('modalCat').style.display='none'; document.getElementById('cat-name').value=''; initApp(); }
         });
+
+        async function backupUserData(){
+
+    if(!CURRENT_USER){
+        showAlert("User tidak ditemukan.");
+        return;
+    }
+
+
+    showAlert("Sedang membuat backup...");
+
+
+    const res = await callAPI({
+        action:"backupUserData",
+        userId:CURRENT_USER
+    });
+
+
+    if(!res.success){
+        showAlert("Backup gagal: " + res.message);
+        return;
+    }
+
+
+    const backup = {
+        userId: CURRENT_USER,
+        backupDate: new Date().toISOString(),
+        data: res.data
+    };
+
+
+    const blob = new Blob(
+        [JSON.stringify(backup,null,2)],
+        {
+            type:"application/json"
+        }
+    );
+
+
+    const url = URL.createObjectURL(blob);
+
+
+    const a=document.createElement("a");
+
+    a.href=url;
+
+    a.download=
+    "backup-user-"+CURRENT_USER+"-"+Date.now()+".json";
+
+
+    document.body.appendChild(a);
+
+    a.click();
+
+    document.body.removeChild(a);
+
+
+    URL.revokeObjectURL(url);
+
+
+    showAlert("Backup berhasil dibuat.");
+}
 
         window.onerror=function(e){
         alert("ERROR JS: "+e);
