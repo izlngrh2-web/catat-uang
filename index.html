@@ -592,7 +592,7 @@ font-size:35px;
                 Backup Sekarang
             </button>
             </div>
-            </div>
+            
 
             <div class="card">
                 <div class="flex-between" style="margin-bottom: 12px;">
@@ -601,9 +601,10 @@ font-size:35px;
                 </div>
                 <div id="list-kategori-setting"></div>
             </div>
-        </div>
+        
 
         <div class="bottom-nav">
+        </div>
             <div class="nav-item active" onclick="switchTab('home', this)"><span class="nav-icon">🏠</span>Beranda</div>
             <div class="nav-item" onclick="switchTab('riwayat', this)"><span class="nav-icon">📝</span>Transaksi</div>
             <div class="nav-item" onclick="switchTab('grafik', this)"><span class="nav-icon">📊</span>Grafik</div>
@@ -637,7 +638,7 @@ font-size:35px;
 
                  <select id="tx-cat" required>
                      <option value="">Pilih Kategori...</option>
-                 </select>>
+                 </select>
 
                 <input type="text" id="tx-desc" placeholder="Keterangan..." required>
                 <input type="number" id="tx-amount" placeholder="Nominal (Rp)" required>
@@ -682,18 +683,18 @@ font-size:35px;
         </div>
     </div>
 
-    <!-- MODAL KATEGORI -->
-    <div class="modal" id="modalCat">
-        <div class="modal-content">
-            <h3 style="margin-top:0; font-size: 18px; font-weight: 600;">Tambah Kategori</h3>
-            <form id="formCat">
-                <select id="cat-type"><option value="expense">Pengeluaran</option><option value="income">Pemasukan</option></select>
-                <input type="text" id="cat-name" placeholder="Nama Kategori" required>
-                <button type="submit" class="btn" id="btn-cat">Simpan</button>
-                <button type="button" class="btn" style="background:#E2E8F0; color:var(--text-main); margin-top:8px;" onclick="document.getElementById('modalCat').style.display='none'">Batal</button>
-            </form>
-        </div>
-    </div>
+                <!-- MODAL KATEGORI -->
+                <div class="modal" id="modalCat">
+                    <div class="modal-content">
+                        <h3 style="margin-top:0; font-size: 18px; font-weight: 600;">Tambah Kategori</h3>
+                        <form id="formCat">
+                            <select id="cat-type"><option value="expense">Pengeluaran</option><option value="income">Pemasukan</option></select>
+                            <input type="text" id="cat-name" placeholder="Nama Kategori" required>
+                            <button type="submit" class="btn" id="btn-cat">Simpan</button>
+                            <button type="button" class="btn" style="background:#E2E8F0; color:var(--text-main); margin-top:8px;" onclick="document.getElementById('modalCat').style.display='none'">Batal</button>
+                        </form>
+                    </div>
+                </div>
 
     <!-- MODAL KONFIRMASI KUSTOM -->
     <div class="modal" id="modalCustomConfirm">
