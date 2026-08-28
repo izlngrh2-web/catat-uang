@@ -592,6 +592,26 @@ font-size:35px;
                 Backup Sekarang
             </button>
             </div>
+            <div class="card">
+    <h3 style="margin-top:0;font-size:15px;font-weight:600;">
+        Restore Data
+    </h3>
+
+    <p style="font-size:12px;color:var(--text-muted)">
+        Kembalikan data dari file backup akun ini.
+    </p>
+
+    <input 
+        type="file" 
+        id="restore-file" 
+        accept=".json"
+        style="font-size:12px;"
+    >
+
+    <button class="btn" onclick="restoreUserData()">
+        Restore Sekarang
+    </button>
+</div>
             
 
             <div class="card">
@@ -2262,6 +2282,76 @@ Math.max(target-expense,0)
 
 
     showAlert("Backup berhasil dibuat.");
+}
+
+        function restoreUserData(){
+
+    const file = document.getElementById("restore-file").files[0];
+
+    if(!file){
+        alert("Pilih file backup dulu");
+        return;
+    }
+
+
+    const reader = new FileReader();
+
+
+    reader.onload = function(e){
+
+        try{
+
+            const data = JSON.parse(e.target.result);
+
+
+            // cek pemilik data
+            if(data.user_id !== currentUser.id){
+                alert("Backup bukan milik akun ini");
+                return;
+            }
+
+
+            localStorage.setItem(
+                "transaksi_"+currentUser.id,
+                JSON.stringify(data.transaksi)
+            );
+
+
+            localStorage.setItem(
+                "rekening_"+currentUser.id,
+                JSON.stringify(data.rekening)
+            );
+
+
+            localStorage.setItem(
+                "kategori_"+currentUser.id,
+                JSON.stringify(data.kategori)
+            );
+
+
+            localStorage.setItem(
+                "anggaran_"+currentUser.id,
+                JSON.stringify(data.anggaran)
+            );
+
+
+            alert("Restore berhasil");
+
+
+            location.reload();
+
+
+        }catch(err){
+
+            alert("File backup rusak");
+
+        }
+
+    };
+
+
+    reader.readAsText(file);
+
 }
 
         window.onerror=function(e){
