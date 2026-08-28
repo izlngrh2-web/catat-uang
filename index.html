@@ -780,8 +780,6 @@ font-size:35px;
 
         const text = await response.text();
 
-        alert("RESPON GAS:\n" + text);
-
         return JSON.parse(text);
 
     } catch (err) {
@@ -800,7 +798,6 @@ font-size:35px;
 
         document.getElementById('formAuth').addEventListener('submit', async (e) => {
 
-    alert("SUBMIT LOGIN JALAN");
 
     e.preventDefault();
             const user = document.getElementById('auth-user').value;
@@ -818,7 +815,6 @@ font-size:35px;
  pin: pin 
 });
 
-alert(JSON.stringify(res));
 
 if(res.success) {
     CURRENT_USER = res.userId;
