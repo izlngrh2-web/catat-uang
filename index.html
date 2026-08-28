@@ -799,6 +799,58 @@ Sync Data
         </div>
     </div>
 
+        <div class="modal" id="modalCategoryBudget">
+
+<div class="modal-content">
+
+<h3>
+Anggaran Kategori
+</h3>
+
+
+<select id="budget-category-select">
+<option value="">
+Pilih Kategori
+</option>
+</select>
+
+
+<input 
+type="number"
+id="budget-category-amount"
+placeholder="Batas Anggaran">
+
+
+<button 
+class="btn"
+onclick="saveCategoryBudget()">
+
+Simpan
+
+</button>
+
+
+<button 
+class="btn"
+style="
+background:#E2E8F0;
+color:#111;
+margin-top:8px;
+"
+onclick="
+document.getElementById('modalCategoryBudget').style.display='none'
+">
+
+Batal
+
+</button>
+
+
+</div>
+
+</div>
+    
+
     <!-- MODAL PERINGATAN ANGGARAN -->
     <div class="modal" id="modalBudgetAlert" style="background: rgba(15, 23, 42, 0.85);">
         <div class="modal-content" style="text-align: center; max-width: 320px;">
@@ -2881,56 +2933,5 @@ document.getElementById(
         
     </script>
 
-    <div class="modal" id="modalCategoryBudget">
-
-<div class="modal-content">
-
-<h3>
-Anggaran Kategori
-</h3>
-
-
-<select id="budget-category-select">
-<option value="">
-Pilih Kategori
-</option>
-</select>
-
-
-<input 
-type="number"
-id="budget-category-amount"
-placeholder="Batas Anggaran">
-
-
-<button 
-class="btn"
-onclick="saveCategoryBudget()">
-
-Simpan
-
-</button>
-
-
-<button 
-class="btn"
-style="
-background:#E2E8F0;
-color:#111;
-margin-top:8px;
-"
-onclick="
-document.getElementById('modalCategoryBudget').style.display='none'
-">
-
-Batal
-
-</button>
-
-
-</div>
-
-</div>
-    
 </body>
 </html>
