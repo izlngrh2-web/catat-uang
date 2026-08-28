@@ -1114,6 +1114,7 @@
 
         function renderAccountSettings() {
             const cont = document.getElementById('list-rekening-setting');
+            console.log("REKENING:", APP_DATA.accounts);
             cont.innerHTML = APP_DATA.accounts.map(acc => `
                 <div class="cat-list-item">
                     <div>
