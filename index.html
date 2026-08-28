@@ -1001,6 +1001,9 @@ showApp();
 
         async function initApp() {
             const res = await callAPI({ action: 'getInitData', userId: CURRENT_USER });
+
+            console.log("SYNC DATA:", res);
+            
             if(res.success) {
                 APP_DATA = res;
                 renderDashboard();
