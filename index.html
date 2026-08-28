@@ -772,18 +772,23 @@ font-size:35px;
         }
 
         async function callAPI(payload) {
-            alert(JSON.stringify(payload));
-            try {
-                const response = await fetch(GAS_URL, {
-                    method: 'POST',
-                    body: JSON.stringify(payload)
-                });
-                return await response.json();
-            } catch (err) {
-                showAlert("Gagal terhubung ke server: " + err.message);
-                return { success: false };
-            }
-        }
+    try {
+        const response = await fetch(GAS_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
+
+        const text = await response.text();
+
+        alert("RESPON GAS:\n" + text);
+
+        return JSON.parse(text);
+
+    } catch (err) {
+        showAlert("Gagal terhubung: " + err.message);
+        return { success:false };
+    }
+}
 
         function toggleAuthMode() {
             isRegisterMode = !isRegisterMode;
