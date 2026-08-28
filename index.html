@@ -772,6 +772,7 @@ font-size:35px;
         }
 
         async function callAPI(payload) {
+            alert(JSON.stringify(payload));
             try {
                 const response = await fetch(GAS_URL, {
                     method: 'POST',
@@ -793,7 +794,10 @@ font-size:35px;
         }
 
         document.getElementById('formAuth').addEventListener('submit', async (e) => {
-            e.preventDefault();
+
+    alert("SUBMIT LOGIN JALAN");
+
+    e.preventDefault();
             const user = document.getElementById('auth-user').value;
             const pin = document.getElementById('auth-pin').value;
             const nama = document.getElementById('auth-name').value;
@@ -1167,7 +1171,7 @@ APP_DATA.transactions
 .forEach(tx=>{
 
 
-    let iconMap[tx.category || ""] || "💳";
+    let icon = iconMap[tx.category || ""] || "💳";
 
     let isIncome = tx.type === "income";
 
