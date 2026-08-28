@@ -943,7 +943,12 @@ showApp();
             const res = await callAPI({ action: 'getInitData', userId: CURRENT_USER });
             if(res.success) {
                 APP_DATA = res;
-                renderHome();
+                renderDashboard();
+                const now = new Date();
+
+checkBudgetWarning(
+    now.getFullYear()+"-"+(now.getMonth()+1)
+);
                 renderHomeLastTransaction();
                 document.getElementById('filter-month').value =
                     new Date().toISOString().slice(0,7);
@@ -1063,6 +1068,16 @@ message:e.message
                 alertText.innerText = `Perhatian! Pengeluaran bulan ini sudah mencapai ${Math.round(persentase)}% dan hampir mendekati batas anggaran bulanan.`;
                 alertModal.style.display = 'flex';
             }
+            const warningKey =
+"budget_warning_"+CURRENT_USER+"_"+currentMonth;
+
+
+if(localStorage.getItem(warningKey)){
+    return;
+}localStorage.setItem(
+warningKey,
+"shown"
+);
         }
 
         function switchTab(tab, el) {
