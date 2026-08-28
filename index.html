@@ -755,16 +755,22 @@
         }
 
         function openTxModal() {
-            document.getElementById('modal-tx-title').innerText = "Tambah Transaksi";
-            document.getElementById('formTx').reset();
-            document.getElementById('tx-id').value = "";
-            document.getElementById('tx-type').value = "expense";
-            document.getElementById('tx-date').value = today.toISOString().split('T')[0];
-            populateCategories();
-            populateAccounts();
-            populateTransferAccounts();
-            updateTxTypeUI();
-            document.getElementById('modalTx').style.display = 'flex';
+                document.getElementById('modal-tx-title').innerText = "Tambah Transaksi";
+                document.getElementById('formTx').reset();
+                document.getElementById('tx-id').value = "";
+                document.getElementById('tx-type').value = "expense";
+                document.getElementById('tx-date').value = today.toISOString().split('T')[0];
+
+             populateCategories();
+             populateAccounts();
+
+        // tambahkan delay kecil agar APP_DATA sudah siap
+        setTimeout(() => {
+             populateTransferAccounts();
+         }, 100);
+
+        updateTxTypeUI();
+                document.getElementById('modalTx').style.display = 'flex';
         }
 
         function openEditTxModal(id) {
