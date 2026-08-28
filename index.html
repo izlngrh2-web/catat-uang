@@ -803,12 +803,19 @@ font-size:35px;
                 if(res.success) { showAlert("Pendaftaran berhasil! Silakan Masuk."); toggleAuthMode(); } 
                 else { showAlert(res.message); }
             } else {
-                const res = await callAPI({ action: 'login', username: user, pin: pin });
-                if(res.success) {
-                    CURRENT_USER = res.userId;
-                    localStorage.setItem('auth_user_id', CURRENT_USER);
-                    showApp();
-                } else { showAlert(res.message); }
+                const res = await callAPI({ 
+ action: 'login', 
+ username: user, 
+ pin: pin 
+});
+
+alert(JSON.stringify(res));
+
+if(res.success) {
+    CURRENT_USER = res.userId;
+    localStorage.setItem('auth_user_id', CURRENT_USER);
+    showApp();
+} else { showAlert(res.message); }
             }
         });
 
