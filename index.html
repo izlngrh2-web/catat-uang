@@ -762,6 +762,8 @@ font-size:35px;
         document.getElementById('tx-date').value = today.toISOString().split('T')[0];
 
         window.onload = function() {
+            console.log("AUTH:", localStorage.getItem("auth_user_id"));
+            console.log("CURRENT:", CURRENT_USER);
             const savedUser = localStorage.getItem('auth_user_id');
             if (savedUser) { CURRENT_USER = savedUser; showApp(); }
             
@@ -2326,10 +2328,16 @@ Math.max(target-expense,0)
             );
 
 
-            localStorage.setItem(
-                "anggaran_"+CURRENT_USER,
-    JSON.stringify(data.data.budgets)
-            );
+            if(data.data.budget){
+    localStorage.setItem(
+        "anggaran_"+CURRENT_USER,
+        JSON.stringify(data.data.budget)
+    );
+}else{
+    localStorage.removeItem(
+        "anggaran_"+CURRENT_USER
+    );
+}
 
 
             alert("Restore berhasil");
