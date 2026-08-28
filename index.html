@@ -2305,33 +2305,30 @@ Math.max(target-expense,0)
 
 
             // cek pemilik data
-            if(data.user_id !== currentUser.id){
+            if(data.userId !== CURRENT_USER){
                 alert("Backup bukan milik akun ini");
                 return;
             }
 
 
             localStorage.setItem(
-                "transaksi_"+currentUser.id,
-                JSON.stringify(data.transaksi)
+                "transaksi_"+CURRENT_USER,
+    JSON.stringify(data.data.transactions)
+
+
+            localStorage.setItem(
+                "rekening_"+CURRENT_USER,
+    JSON.stringify(data.data.accounts)
+
+            localStorage.setItem(
+                "kategori_"+CURRENT_USER,
+    JSON.stringify(data.data.categories)
             );
 
 
             localStorage.setItem(
-                "rekening_"+currentUser.id,
-                JSON.stringify(data.rekening)
-            );
-
-
-            localStorage.setItem(
-                "kategori_"+currentUser.id,
-                JSON.stringify(data.kategori)
-            );
-
-
-            localStorage.setItem(
-                "anggaran_"+currentUser.id,
-                JSON.stringify(data.anggaran)
+                "anggaran_"+CURRENT_USER,
+    JSON.stringify(data.data.budgets)
             );
 
 
