@@ -307,6 +307,82 @@ Rp 0
 </div>
 
 </div>
+
+    <!-- INSIGHT KEUANGAN -->
+
+<div class="card" style="margin-top:15px;">
+
+<h3 style="
+font-size:15px;
+margin:0 0 15px;
+">
+Insight Keuangan
+</h3>
+
+
+<div id="home-insight"
+style="
+font-size:14px;
+line-height:1.6;
+color:var(--text-main);
+">
+Memuat analisis...
+</div>
+
+
+</div>
+
+    <div class="card" style="margin-top:15px;">
+
+<h3 style="
+font-size:15px;
+margin:0 0 15px;
+">
+Prediksi Akhir Bulan
+</h3>
+
+
+<div style="
+display:flex;
+justify-content:space-between;
+align-items:center;
+">
+
+
+<div>
+
+<div style="
+font-size:12px;
+color:var(--text-muted);
+">
+Perkiraan saldo
+</div>
+
+
+<strong id="home-prediksi"
+style="
+font-size:22px;
+color:var(--primary);
+">
+Rp 0
+</strong>
+
+
+</div>
+
+
+<div id="home-prediksi-icon"
+style="
+font-size:35px;
+">
+📈
+</div>
+
+
+</div>
+
+</div>
+            
     <!-- QUICK ACTION -->
     <h3 style="
         font-size:15px;
@@ -826,6 +902,8 @@ Rp 0
     if(tab === 'saya') {
     renderAccountSettings();
     renderCategorySettings();
+    renderHomeInsight();
+    renderHomePrediction();
     }
 
 }
@@ -1006,6 +1084,159 @@ Rp 0
         renderHomeBudget();
 
 }
+
+        function renderHomeInsight(){
+
+
+let expenseData =
+APP_DATA.transactions
+.filter(t=>t.type==="expense");
+
+
+
+let kategori={};
+
+
+expenseData.forEach(t=>{
+
+kategori[t.category]=
+(kategori[t.category]||0)
++
+Number(t.amount);
+
+});
+
+
+
+let terbesar =
+Object.keys(kategori)
+.sort(
+(a,b)=>kategori[b]-kategori[a]
+)[0];
+
+
+
+let nilai =
+terbesar ?
+formatRp(kategori[terbesar])
+:
+"Rp 0";
+
+
+
+let box =
+document.getElementById(
+"home-insight"
+);
+
+
+
+if(terbesar){
+
+box.innerHTML=`
+
+💡 Pengeluaran terbesar:
+<b>${terbesar}</b>
+
+<br>
+
+Total:
+<b>${nilai}</b>
+
+<br><br>
+
+📌 Coba evaluasi kategori ini
+agar pengeluaran lebih hemat.
+
+`;
+
+}
+else{
+
+box.innerHTML=
+"Belum ada data transaksi bulan ini.";
+
+}
+
+
+}
+
+        function renderHomePrediction(){
+
+
+let saldo =
+APP_DATA.accounts.reduce(
+(a,b)=>a+Number(b.balance),
+0
+);
+
+
+
+let expense =
+APP_DATA.transactions
+.filter(t=>t.type==="expense")
+.reduce(
+(a,b)=>a+Number(b.amount),
+0
+);
+
+
+
+let today =
+new Date().getDate();
+
+
+
+let avg =
+today?
+expense/today:
+0;
+
+
+
+let days =
+new Date(
+new Date().getFullYear(),
+new Date().getMonth()+1,
+0
+).getDate();
+
+
+
+let prediksi =
+saldo -
+(avg*(days-today));
+
+
+
+document.getElementById(
+"home-prediksi"
+).innerHTML=
+formatRp(
+Math.max(prediksi,0)
+);
+
+
+
+let icon =
+document.getElementById(
+"home-prediksi-icon"
+);
+
+
+if(prediksi>saldo*0.7){
+
+icon.innerHTML="📈";
+
+}else{
+
+icon.innerHTML="⚠️";
+
+}
+
+
+}
+        
         function renderHomeLastTransaction(){
 
     const box=document.getElementById('home-last-transaction');
