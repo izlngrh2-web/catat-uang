@@ -213,12 +213,20 @@
                     <option value="expense">Pengeluaran</option>
                     <option value="income">Pemasukan</option>
                     <option value="transfer">Transfer</option>
-                </select>
-                <select id="tx-account" required onchange="populateTransferAccounts()">
-                <select id="tx-to-account" required>
-                    <option value="">Pilih Rekening Tujuan...</option>
-                </select>
-                <select id="tx-cat" required><option value="">Pilih Kategori...</option></select>
+                 </select>
+
+                 <select id="tx-account" required onchange="populateTransferAccounts()">
+                     <option value="">Pilih Rekening / Dompet...</option>
+                 </select>
+
+                 <select id="tx-to-account" style="display:none;">
+                     <option value="">Pilih Rekening Tujuan...</option>
+                 </select>
+
+                 <select id="tx-cat" required>
+                     <option value="">Pilih Kategori...</option>
+                 </select>>
+
                 <input type="text" id="tx-desc" placeholder="Keterangan..." required>
                 <input type="number" id="tx-amount" placeholder="Nominal (Rp)" required>
                 <input type="date" id="tx-date" required>
@@ -736,69 +744,63 @@
         }
 
         function updateTxTypeUI(){
-            const type =
-            document.getElementById('tx-type').value;
-            const cat =
-            document.getElementById('tx-cat');
-            const toAccount =
-            document.getElementById('tx-to-account');
+            const type = document.getElementById('tx-type').value;
+            const cat = document.getElementById('tx-cat');
+            const tujuan = document.getElementById('tx-to-account');
 
-            if(type === "transfer"){
-               cat.style.display = "none";
-               cat.required = false;
+              if(!cat || !tujuan) return;
 
-               toAccount.style.display = "block";
-               toAccount.required = true;
 
-            }else{
-               cat.style.display = "block";
-               cat.required = true;
+              if(type === "transfer"){
 
-               toAccount.style.display = "none";
-               toAccount.required = false;
+                cat.style.display = "none";
+                cat.required = false;
 
-            }
+                tujuan.style.display = "block";
+                tujuan.required = true;
+
+              }else{
+
+                cat.style.display = "block";
+                cat.required = true;
+
+                tujuan.style.display = "none";
+                tujuan.required = false;
+                tujuan.value = "";
+
+              } 
         }
 
-        function openTxModal() {
-            const modal = document.getElementById('modalTx');
+        function openTxModal(){
 
-             if (!modal) {
-                  console.log("modalTx tidak ditemukan");
-                  return;
-             }
+             document.getElementById('modal-tx-title').innerText =
+             "Tambah Transaksi";
 
-             document.getElementById('modal-tx-title').innerText = "Tambah Transaksi";
-
+        
              document.getElementById('formTx').reset();
 
-             document.getElementById('tx-id').value = "";
 
-             document.getElementById('tx-type').value = "expense";
+             document.getElementById('tx-id').value="";
 
+
+             document.getElementById('tx-type').value="expense";
+
+           
              document.getElementById('tx-date').value =
-                 new Date().toISOString().split('T')[0];
+             today.toISOString().split('T')[0];
 
 
              populateCategories();
 
              populateAccounts();
 
-
-             const toAccount = document.getElementById('tx-to-account');
-
-             if (toAccount) {
-                 toAccount.innerHTML =
-                 '<option value="">Pilih Rekening Tujuan...</option>';
-
-                 toAccount.style.display = "none";
-             }
-
+             populateTransferAccounts();
 
              updateTxTypeUI();
 
 
-             modal.style.display = "flex";
+             document.getElementById('modalTx').style.display='flex';
+
         }
 
         function openEditTxModal(id) {
@@ -839,29 +841,24 @@
         }
 
         function populateTransferAccounts(){
-            const source =
-            document.getElementById('tx-account');
-            
-            const target =
-            document.getElementById('tx-to-account');
 
-            if(!source || !target) return;
+            const tujuan = document.getElementById('tx-to-account');
 
-            target.innerHTML =
-            '<option value="">Pilih Rekening Tujuan...</option>';
+               if(!tujuan) return;
 
-            APP_DATA.accounts.forEach(acc=>{
 
-            if(acc.id != source.value){
+               tujuan.innerHTML =
+               '<option value="">Pilih Rekening Tujuan...</option>';
 
-              target.innerHTML +=
-              `<option value="${acc.id}">
-                ${acc.bank} (${acc.name})
-               </option>`;
+  
+                APP_DATA.accounts.forEach(acc=>{
 
-             }
+                tujuan.innerHTML += `
+                <option value="${acc.id}">
+                    ${acc.bank} (${acc.name})
+                </option>`;
 
-             });
+                });
 
         }
 
