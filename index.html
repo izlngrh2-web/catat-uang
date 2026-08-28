@@ -839,6 +839,8 @@ if(res.success) {
                 APP_DATA = res;
                 renderHome();
                 renderHomeLastTransaction();
+                document.getElementById('filter-month').value =
+                    new Date().toISOString().slice(0,7);
                 renderRiwayat();
                 populateCategories();
                 populateAccounts();
@@ -1648,8 +1650,12 @@ Math.max(target-expense,0)
 
 }
         function renderRiwayat() {
+            console.log("APP_DATA:", APP_DATA);
+            alert(JSON.stringify(APP_DATA.transactions));
             const val = document.getElementById('filter-month').value;
+            console.log("FILTER:", val);
             const data = getFilteredTx('month', val);
+            console.log("HASIL FILTER:", data);
             const container = document.getElementById('list-riwayat');
             container.innerHTML = '';
             if(data.length === 0) return container.innerHTML = '<p style="text-align:center; color:var(--text-muted); padding: 20px;">Tidak ada transaksi.</p>';
