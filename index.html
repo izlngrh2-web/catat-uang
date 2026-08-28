@@ -764,12 +764,11 @@
              populateCategories();
              populateAccounts();
 
-        // tambahkan delay kecil agar APP_DATA sudah siap
-        setTimeout(() => {
+             setTimeout(() => {
              populateTransferAccounts();
-         }, 100);
+             }, 300);
 
-        updateTxTypeUI();
+             updateTxTypeUI();
                 document.getElementById('modalTx').style.display = 'flex';
         }
 
@@ -811,9 +810,19 @@
         }
 
         function populateTransferAccounts() {
-            const select = document.getElementById('tx-to-account');
-            select.innerHTML = '<option value="">Pilih Rekening Tujuan...</option>' +
-                APP_DATA.accounts.map(acc => `<option value="${acc.id}">${acc.bank} (${acc.name})</option>`).join('');
+           const source = document.getElementById('tx-account');
+           const target = document.getElementById('tx-to-account');
+
+           target.innerHTML = '<option value="">Pilih Rekening Tujuan...</option>';
+
+           Array.from(source.options).forEach(opt => {
+               if (opt.value !== "") {
+                   target.innerHTML += `
+                       <option value="${opt.value}">
+                           ${opt.text}
+                       </option>`;
+               }
+           });
         }
 
         document.getElementById('formTx').addEventListener('submit', async (e) => {
