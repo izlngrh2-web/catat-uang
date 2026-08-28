@@ -1131,6 +1131,58 @@ document.getElementById('home-account-list')
     .innerHTML = txHtml;
 
 }
+
+        function openAccountDetail(accountId){
+
+    const acc = APP_DATA.accounts.find(a => a.id == accountId);
+
+    if(!acc){
+        showCustomAlert("Rekening tidak ditemukan");
+        return;
+    }
+
+
+    let totalIn = 0;
+    let totalOut = 0;
+
+
+    APP_DATA.transactions.forEach(tx=>{
+
+        if(
+            tx.accountId == accountId ||
+            tx.account == accountId
+        ){
+
+            if(tx.type==="income"){
+                totalIn += Number(tx.amount);
+            }
+
+            if(tx.type==="expense"){
+                totalOut += Number(tx.amount);
+            }
+
+        }
+
+    });
+
+
+    showCustomAlert(
+`
+${acc.bank}
+
+Saldo :
+${formatRupiah(acc.balance)}
+
+Total Masuk :
+${formatRupiah(totalIn)}
+
+Total Keluar :
+${formatRupiah(totalOut)}
+`
+    );
+
+}
+        
         function quickTransaction(type){
 
     openTxModal();
