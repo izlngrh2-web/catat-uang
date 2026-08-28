@@ -717,6 +717,11 @@
 
     if(tab === 'laporan') renderLaporan();
 
+    if(tab === 'saya') {
+    renderAccountSettings();
+    renderCategorySettings();
+    }
+
 }
 
         function switchLaporanSub(sub) {
@@ -1114,7 +1119,6 @@
 
         function renderAccountSettings() {
             const cont = document.getElementById('list-rekening-setting');
-            console.log("REKENING:", APP_DATA.accounts);
             cont.innerHTML = APP_DATA.accounts.map(acc => `
                 <div class="cat-list-item">
                     <div>
@@ -1126,6 +1130,7 @@
                         <button class="btn-del" onclick="hapusRekening('${acc.id}')">Hapus</button>
                     </div>
                 </div>`).join('') || '<p style="text-align:center; color:var(--text-muted); font-size:13px; padding:10px 0;">Belum ada rekening.</p>';
+            console.log("REKENING:", APP_DATA.accounts);
         }
 
         function renderCategorySettings() {
