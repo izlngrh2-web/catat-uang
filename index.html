@@ -762,6 +762,14 @@
             });
         }
 
+        function formatRupiah(angka) {
+
+    angka = Number(angka) || 0;
+
+    return "Rp " + angka.toLocaleString('id-ID');
+
+}
+
         function setGrafikType(type) { activeGType = type; document.querySelectorAll('.g-type').forEach(e=>e.classList.remove('active')); event.target.classList.add('active'); renderGrafik(); }
         function setGrafikPeriod(period) { 
             activeGPeriod = period; 
