@@ -1043,7 +1043,8 @@ message:e.message
             let totalPengeluaranNonTabungan = 0;
 
             dataBulanIni.forEach(tx => {
-                if (!(tx.category || '').toLowerCase().includes('tabungan')) {
+                if(tx.category && 
+                   tx.category.toLowerCase() !== "tabungan") {
                     totalPengeluaranNonTabungan += tx.amount;
                 }
             });
@@ -1478,6 +1479,7 @@ document.getElementById(
 
         renderFinanceStatus();
         renderHomeBudget();
+        checkBudgetWarning(new Date());
 
 }
 
@@ -1979,51 +1981,46 @@ box.innerHTML=
 
         function renderHomeBudget(){
 
-let target =
-Number(localStorage.getItem(
-"targetAnggaran"
-)) || 0;
+    let target = Number(APP_DATA.targetAnggaran) || 0;
 
 
-let expense =
-APP_DATA.transactions
-.filter(t=>t.type==="expense")
-.reduce(
-(a,b)=>a+Number(b.amount),
-0
-);
+    let expense =
+    APP_DATA.transactions
+    .filter(t=>t.type==="expense")
+    .reduce(
+        (a,b)=>a+Number(b.amount),
+        0
+    );
 
 
-
-let persen =
-target ? 
-Math.min(
-Math.round(expense/target*100),
-100
-)
-:0;
-
-
-
-document.getElementById(
-"home-budget-percent"
-).innerHTML=
-persen+"%";
+    let persen = target
+    ?
+    Math.min(
+        Math.round(expense / target * 100),
+        100
+    )
+    :
+    0;
 
 
-document.getElementById(
-"home-budget-bar"
-).style.width=
-persen+"%";
+    document.getElementById(
+        "home-budget-percent"
+    ).innerHTML =
+    persen+"%";
 
 
-document.getElementById(
-"home-budget-left"
-).innerHTML=
-formatRp(
-Math.max(target-expense,0)
-);
+    document.getElementById(
+        "home-budget-bar"
+    ).style.width =
+    persen+"%";
 
+
+    document.getElementById(
+        "home-budget-left"
+    ).innerHTML =
+    formatRupiah(
+        Math.max(target-expense,0)
+    );
 
 }
 
