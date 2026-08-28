@@ -678,6 +678,14 @@ Sync Data
                     <button class="btn" style="width:auto; padding:6px 12px; font-size: 12px;" onclick="document.getElementById('modalCat').style.display='flex'">+ Tambah</button>
                 </div>
                 <div id="list-kategori-setting"></div>
+            </div
+
+            <div class="card">
+                <div class="flex-between">
+                    <h3 style="margin:0;font-size:15px;">Anggaran Kategori</h3>
+                    <button class="btn" style="width:auto; padding:6px 12px; font-size: 12px;" onclick="openCategoryBudgetModal()">+ Tambah</button>
+                </div>
+                <div id="list-category-budget-setting"></div>
             </div>
         </div>
         
@@ -2831,6 +2839,98 @@ renderGoal();
         window.onerror=function(e){
         alert("ERROR JS: "+e);
         }
+
+        function openCategoryBudgetModal(){
+
+const select =
+document.getElementById(
+"budget-category-select"
+);
+
+
+select.innerHTML =
+`
+<option value="">
+Pilih Kategori
+</option>
+`;
+
+
+APP_DATA.categories
+.filter(c=>c.type==="expense")
+.forEach(c=>{
+
+
+select.innerHTML +=
+`
+<option value="${c.id}">
+${c.name}
+</option>
+`;
+
+
+});
+
+
+document.getElementById(
+"modalCategoryBudget"
+).style.display="flex";
+
+
+}
+        
     </script>
+
+    <div class="modal" id="modalCategoryBudget">
+
+<div class="modal-content">
+
+<h3>
+Anggaran Kategori
+</h3>
+
+
+<select id="budget-category-select">
+<option value="">
+Pilih Kategori
+</option>
+</select>
+
+
+<input 
+type="number"
+id="budget-category-amount"
+placeholder="Batas Anggaran">
+
+
+<button 
+class="btn"
+onclick="saveCategoryBudget()">
+
+Simpan
+
+</button>
+
+
+<button 
+class="btn"
+style="
+background:#E2E8F0;
+color:#111;
+margin-top:8px;
+"
+onclick="
+document.getElementById('modalCategoryBudget').style.display='none'
+">
+
+Batal
+
+</button>
+
+
+</div>
+
+</div>
+    
 </body>
 </html>
