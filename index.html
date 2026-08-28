@@ -122,6 +122,14 @@
 
     </div>
 
+        <div id="sync-status"
+style="
+font-size:12px;
+color:#64748B;
+margin-top:5px;
+">
+</div>
+
     <!-- STATUS KEUANGAN -->
 <div class="card" style="margin-top:15px;">
 
@@ -1010,6 +1018,7 @@ showApp();
                 renderHomeLastTransaction();
                 document.getElementById('filter-month').value =
                     new Date().toISOString().slice(0,7);
+                renderSyncStatus();
                 renderRiwayat();
                 populateCategories();
                 populateAccounts();
@@ -1022,6 +1031,43 @@ showApp();
                 checkBudgetWarning(currentVal);
             }
         }
+
+        async function refreshData(){
+
+    if(!CURRENT_USER){
+        return;
+    }
+
+
+    const res = await callAPI({
+        action:"getInitData",
+        userId:CURRENT_USER
+    });
+
+
+    if(res.success){
+
+        APP_DATA = res;
+
+
+        renderDashboard();
+        renderRiwayat();
+        renderLaporan();
+        renderAccountSettings();
+        renderCategorySettings();
+        loadTargetAnggaran();
+        renderSyncStatus();
+
+
+    }else{
+
+        showAlert(
+            "Gagal sinkronisasi data"
+        );
+
+    }
+
+}
 
         function openAccountDetail(id){
 
@@ -1535,7 +1581,21 @@ document.getElementById(
 
 }
 
-        
+        function renderSyncStatus(){
+
+    const box=document.getElementById("sync-status");
+
+    if(!box || !APP_DATA.lastSync) return;
+
+
+    const waktu=new Date(APP_DATA.lastSync);
+
+
+    box.innerHTML =
+    "🔄 Data terakhir diperbarui: "+
+    waktu.toLocaleString("id-ID");
+
+}
         
         function quickTransaction(type){
 
