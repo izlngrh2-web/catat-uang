@@ -591,6 +591,9 @@ font-size:35px;
             <button class="btn" onclick="backupUserData()">
                 Backup Sekarang
             </button>
+                <button class="btn" onclick="syncUserData();showAlert('Data diperbarui')">
+Sync Data
+</button>
             </div>
             <div class="card">
     <h3 style="margin-top:0;font-size:15px;font-weight:600;">
@@ -862,8 +865,16 @@ document.getElementById("app-container").style.display="block";
 
 if(res.success) {
     CURRENT_USER = res.userId;
-    localStorage.setItem('auth_user_id', CURRENT_USER);
-    showApp();
+
+localStorage.setItem(
+    'auth_user_id',
+    CURRENT_USER
+);
+
+// ambil data terbaru
+await syncUserData();
+
+showApp();
 } else { showAlert(res.message); }
             }
         });
@@ -940,6 +951,35 @@ ${formatRupiah(keluar)}`
 
 }
 
+        function getUserData(data){
+
+try{
+
+const userId = String(data.userId).trim();
+
+
+return {
+success:true,
+data:{
+transactions:getTransactions(userId),
+accounts:getAccounts(userId),
+categories:getCategories(userId),
+budget:getBudget(userId)
+}
+};
+
+
+}catch(e){
+
+return {
+success:false,
+message:e.message
+};
+
+}
+
+}
+        
         function checkBudgetWarning(currentMonth) {
             const targetAnggaran = APP_DATA.targetAnggaran || 0;
             if (targetAnggaran <= 0) return;
