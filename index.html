@@ -1654,26 +1654,119 @@ Math.max(target-expense,0)
 
     const input = document.getElementById('filter-month');
 
-    if (!input.value) {
-        input.value = new Date().toISOString().slice(0,7);
+    if(!input.value){
+        input.value = new Date()
+        .toISOString()
+        .slice(0,7);
     }
 
     const val = input.value;
 
     const data = getFilteredTx('month', val);
 
-    const container = document.getElementById('list-riwayat');
+    const container =
+    document.getElementById('list-riwayat');
 
-    container.innerHTML = '';
+    container.innerHTML = "";
 
-    if(data.length === 0) {
-        return container.innerHTML =
-        '<p style="text-align:center;color:var(--text-muted);padding:20px;">Tidak ada transaksi.</p>';
+    if(data.length === 0){
+
+        container.innerHTML =
+        `
+        <p style="
+        text-align:center;
+        color:var(--text-muted);
+        padding:20px;">
+        Tidak ada transaksi bulan ini.
+        </p>
+        `;
+
+        return;
     }
 
-    data.forEach(tx => {
-        ...
+
+    data.forEach(tx=>{
+
+        const isInc =
+        tx.type === "income";
+
+
+        const acc =
+        APP_DATA.accounts.find(
+            a=>a.id===tx.accountId
+        );
+
+
+        const accName =
+        acc ? acc.bank : "Dompet";
+
+
+        container.innerHTML += `
+
+        <div class="card">
+
+            <div class="flex-between">
+
+                <div>
+
+                    <div style="
+                    font-weight:600;">
+                    ${tx.desc || tx.category}
+                    </div>
+
+
+                    <div style="
+                    font-size:12px;
+                    color:var(--text-muted);">
+
+                    ${tx.category}
+                    • ${accName}
+                    • ${tx.date}
+
+                    </div>
+
+                </div>
+
+
+                <div class="${isInc?'text-green':'text-red'}"
+                style="font-weight:700">
+
+                ${isInc?'+':'-'}
+                ${formatRp(tx.amount)}
+
+                </div>
+
+
+            </div>
+
+
+            <div class="tx-actions">
+
+            <button class="btn-edit"
+            onclick="openEditTxModal('${tx.id}')">
+
+            Edit
+
+            </button>
+
+
+            <button class="btn-del"
+            onclick="hapusTransaksi('${tx.id}')">
+
+            Hapus
+
+            </button>
+
+            </div>
+
+
+        </div>
+
+        `;
+
+
     });
+
 }
 
         function formatRupiah(angka) {
