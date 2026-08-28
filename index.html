@@ -382,6 +382,23 @@ font-size:35px;
 </div>
 
 </div>
+
+    <div class="card">
+
+<h3 style="
+font-size:15px;
+margin:0 0 12px;
+">
+🎯 Target Saya
+</h3>
+
+
+<div id="home-goal">
+Belum ada target
+</div>
+
+
+</div>
             
     <!-- QUICK ACTION -->
     <h3 style="
@@ -571,6 +588,43 @@ font-size:35px;
                     <button type="submit" class="btn">Simpan Target Anggaran</button>
                 </form>
             </div>
+
+            <div class="card">
+
+<h3 style="
+margin-top:0;
+font-size:15px;
+font-weight:600;
+">
+🎯 Target Keuangan
+</h3>
+
+
+<input 
+id="goal-name"
+placeholder="Contoh: Beli Laptop">
+
+
+<input 
+type="number"
+id="goal-target"
+placeholder="Target (Rp)">
+
+
+<input 
+type="number"
+id="goal-current"
+placeholder="Dana terkumpul">
+
+
+<button 
+class="btn"
+onclick="saveGoal()">
+Simpan Target
+</button>
+
+
+</div>
             
             <div class="card">
                 <div class="flex-between" style="margin-bottom: 12px;">
@@ -1396,6 +1450,15 @@ Belum ada transaksi
 </div>
 `;
 
+            let score = renderFinancialScore();
+
+document.getElementById(
+"finance-status-text"
+).innerHTML =
+"Financial Score: "+score+"/100";
+
+            renderGoal();
+
 }
 
         
@@ -1421,9 +1484,20 @@ Belum ada transaksi
         function renderHomeInsight(){
 
 
+const now = new Date();
+
 let expenseData =
-APP_DATA.transactions
-.filter(t=>t.type==="expense");
+APP_DATA.transactions.filter(t=>{
+
+    const d = new Date(t.date);
+
+    return (
+        t.type==="expense" &&
+        d.getMonth()===now.getMonth() &&
+        d.getFullYear()===now.getFullYear()
+    );
+
+});
 
 
 
@@ -1455,7 +1529,53 @@ formatRp(kategori[terbesar])
 :
 "Rp 0";
 
+// rata-rata harian
 
+let hariIni = new Date().getDate();
+
+let totalExpense =
+expenseData.reduce(
+(a,b)=>a+Number(b.amount),
+0
+);
+
+let rataHarian =
+hariIni ?
+totalExpense/hariIni
+:0;
+
+
+
+// analisa hari
+
+let hari={};
+
+expenseData.forEach(t=>{
+
+let d=new Date(t.date);
+
+let nama =
+d.toLocaleDateString(
+"id-ID",
+{
+weekday:"long"
+}
+);
+
+
+hari[nama]=
+(hari[nama]||0)
++
+Number(t.amount);
+
+});
+
+
+let hariBoros =
+Object.keys(hari)
+.sort(
+(a,b)=>hari[b]-hari[a]
+)[0];
 
 let box =
 document.getElementById(
@@ -1472,14 +1592,22 @@ box.innerHTML=`
 <b>${terbesar}</b>
 
 <br>
-
 Total:
 <b>${nilai}</b>
 
 <br><br>
 
-📌 Coba evaluasi kategori ini
-agar pengeluaran lebih hemat.
+📊 Rata-rata pengeluaran harian:
+<b>${formatRp(rataHarian)}</b>
+
+<br><br>
+
+📅 Hari paling boros:
+<b>${hariBoros || "-"}</b>
+
+<br>
+Total:
+<b>${formatRp(hari[hariBoros] || 0)}</b>
 
 `;
 
@@ -1496,77 +1624,115 @@ box.innerHTML=
 
         function renderHomePrediction(){
 
-
-let saldo =
-APP_DATA.accounts.reduce(
-(a,b)=>a+Number(b.balance),
-0
-);
-
+    let saldo =
+    APP_DATA.accounts.reduce(
+        (a,b)=>a+Number(b.balance || 0),
+        0
+    );
 
 
-let expense =
-APP_DATA.transactions
-.filter(t=>t.type==="expense")
-.reduce(
-(a,b)=>a+Number(b.amount),
-0
-);
+    const now = new Date();
+
+    const bulan = now.getMonth();
+    const tahun = now.getFullYear();
 
 
-
-let today =
-new Date().getDate();
-
+    let income = 0;
+    let expense = 0;
 
 
-let avg =
-today?
-expense/today:
-0;
+    APP_DATA.transactions.forEach(t=>{
+
+        let d = new Date(t.date);
 
 
+        if(
+            d.getMonth()===bulan &&
+            d.getFullYear()===tahun
+        ){
 
-let days =
-new Date(
-new Date().getFullYear(),
-new Date().getMonth()+1,
-0
-).getDate();
+            if(t.type==="income"){
+                income += Number(t.amount);
+            }
 
 
+            if(t.type==="expense"){
+                expense += Number(t.amount);
+            }
 
-let prediksi =
-saldo -
-(avg*(days-today));
+        }
+
+    });
 
 
 
-document.getElementById(
-"home-prediksi"
-).innerHTML=
-formatRp(
-Math.max(prediksi,0)
-);
+    let hariIni =
+    now.getDate();
+
+
+    let totalHari =
+    new Date(
+        tahun,
+        bulan+1,
+        0
+    ).getDate();
 
 
 
-let icon =
-document.getElementById(
-"home-prediksi-icon"
-);
+    // rata-rata harian bulan ini
+
+    let avgExpense =
+    hariIni ?
+    expense/hariIni :
+    0;
 
 
-if(prediksi>saldo*0.7){
 
-icon.innerHTML="📈";
+    let sisaHari =
+    totalHari-hariIni;
 
-}else{
 
-icon.innerHTML="⚠️";
 
-}
+    let prediksiExpense =
+    avgExpense*sisaHari;
 
+
+
+    let prediksiSaldo =
+    saldo-prediksiExpense;
+
+
+
+    document.getElementById(
+        "home-prediksi"
+    ).innerHTML =
+    formatRp(
+        Math.max(prediksiSaldo,0)
+    );
+
+
+
+    let icon =
+    document.getElementById(
+        "home-prediksi-icon"
+    );
+
+
+    if(prediksiSaldo > saldo*0.8){
+
+        icon.innerHTML="📈";
+
+    }
+    else if(prediksiSaldo > saldo*0.5){
+
+        icon.innerHTML="📊";
+
+    }
+    else{
+
+        icon.innerHTML="⚠️";
+
+    }
 
 }
         
@@ -1681,6 +1847,136 @@ icon.innerHTML="⚠️";
 
 }
 
+        function renderFinancialScore(){
+
+    let saldo =
+    APP_DATA.accounts.reduce(
+        (a,b)=>a+Number(b.balance || 0),
+        0
+    );
+
+
+    let income = 0;
+    let expense = 0;
+
+
+    const now = new Date();
+
+
+    APP_DATA.transactions.forEach(t=>{
+
+        let d=new Date(t.date);
+
+
+        if(
+            d.getMonth()===now.getMonth() &&
+            d.getFullYear()===now.getFullYear()
+        ){
+
+            if(t.type==="income")
+                income += Number(t.amount);
+
+
+            if(t.type==="expense")
+                expense += Number(t.amount);
+
+        }
+
+    });
+
+
+
+    let score=0;
+
+
+
+    // CASHFLOW
+
+    if(income > expense){
+        score += 20;
+    }
+    else{
+        score += 10;
+    }
+
+
+
+    // RASIO SALDO
+
+    if(saldo>0){
+
+        let ratio =
+        expense/saldo;
+
+
+        if(ratio < 0.3)
+            score+=40;
+
+        else if(ratio < 0.6)
+            score+=25;
+
+        else
+            score+=10;
+
+    }
+
+
+
+    // BUDGET
+
+    let budget =
+    Number(
+    localStorage.getItem("targetAnggaran")
+    )||0;
+
+
+    if(budget){
+
+        let penggunaan =
+        expense/budget;
+
+
+        if(penggunaan < 0.5)
+            score+=30;
+
+        else if(penggunaan < 0.8)
+            score+=20;
+
+        else
+            score+=5;
+
+    }
+    else{
+
+        score+=15;
+
+    }
+
+
+
+    // transaksi aktif
+
+    let hariAktif =
+    new Set(
+        APP_DATA.transactions.map(t=>t.date)
+    ).size;
+
+
+    if(hariAktif>=10)
+        score+=10;
+
+    else if(hariAktif>=5)
+        score+=7;
+
+    else
+        score+=3;
+
+
+
+    return Math.min(score,100);
+
+}
+
         function renderHomeBudget(){
 
 let target =
@@ -1728,6 +2024,86 @@ formatRp(
 Math.max(target-expense,0)
 );
 
+
+}
+
+        function renderGoal(){
+
+let data =
+localStorage.getItem(
+"goal_"+CURRENT_USER
+);
+
+
+let box =
+document.getElementById(
+"home-goal"
+);
+
+
+if(!data){
+
+box.innerHTML=
+"Belum ada target";
+
+return;
+
+}
+
+
+let goal =
+JSON.parse(data);
+
+
+
+let persen =
+Math.min(
+Math.round(
+goal.current/goal.target*100
+),
+100
+);
+
+
+
+box.innerHTML=`
+
+<b>${goal.name}</b>
+
+<br><br>
+
+${formatRupiah(goal.current)}
+/
+${formatRupiah(goal.target)}
+
+
+<div style="
+height:10px;
+background:#E2E8F0;
+border-radius:10px;
+margin-top:10px;
+">
+
+<div style="
+width:${persen}%;
+height:100%;
+background:#10B981;
+border-radius:10px;
+"></div>
+
+
+</div>
+
+
+<div style="
+font-size:12px;
+margin-top:8px;
+">
+Progress ${persen}%
+</div>
+
+
+`;
 
 }
         
@@ -2044,6 +2420,41 @@ Math.max(target-expense,0)
             document.getElementById('rek-bal-note').innerText = 'Saldo saat ini tidak diubah saat mengedit rekening. Gunakan transaksi untuk mengubah saldo.';
             document.getElementById('modalRek').style.display = 'flex';
         }
+
+        function saveGoal(){
+
+let goal={
+
+name:
+document.getElementById("goal-name").value,
+
+
+target:
+Number(
+document.getElementById("goal-target").value
+),
+
+
+current:
+Number(
+document.getElementById("goal-current").value
+)
+
+};
+
+
+localStorage.setItem(
+"goal_"+CURRENT_USER,
+JSON.stringify(goal)
+);
+
+
+showAlert("Target berhasil disimpan");
+
+
+renderGoal();
+
+}
 
         function updateTxTypeUI(){
             const type = document.getElementById('tx-type').value;
