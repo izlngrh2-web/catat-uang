@@ -214,7 +214,7 @@
                     <option value="income">Pemasukan</option>
                     <option value="transfer">Transfer</option>
                 </select>
-                <select id="tx-account" required><option value="">Pilih Rekening / Dompet...</option></select>
+                <select id="tx-account" required onchange="syncTransferAccounts()">
                 <select id="tx-to-account" style="display:none;"><option value="">Pilih Rekening Tujuan...</option></select>
                 <select id="tx-cat" required><option value="">Pilih Kategori...</option></select>
                 <input type="text" id="tx-desc" placeholder="Keterangan..." required>
@@ -807,6 +807,22 @@
             const select = document.getElementById('tx-account');
             select.innerHTML = '<option value="">Pilih Rekening / Dompet...</option>' +
                 APP_DATA.accounts.map(acc => `<option value="${acc.id}">${acc.bank} (${acc.name})</option>`).join('');
+        }
+
+        function syncTransferAccounts() {
+            const source = document.getElementById('tx-account');
+            const target = document.getElementById('tx-to-account');
+
+            target.innerHTML = '<option value="">Pilih Rekening Tujuan...</option>';
+
+            Array.from(source.options).forEach(opt => {
+                if (opt.value !== "") {
+                    target.innerHTML += `
+                      <option value="${opt.value}">
+                          ${opt.text}
+                      </option>`;
+                 }
+             });
         }
 
         function populateTransferAccounts() {
