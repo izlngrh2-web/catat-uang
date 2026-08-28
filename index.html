@@ -771,6 +771,14 @@ font-size:35px;
                 navigator.serviceWorker.register('sw.js');
             }
         };
+        function showApp(){
+
+console.log("USER AKTIF:", CURRENT_USER);
+
+document.getElementById("auth-container").style.display="none";
+document.getElementById("app-container").style.display="block";
+
+}
 
         function showConfirm(message, onYes) {
             document.getElementById('custom-confirm-text').innerText = message;
