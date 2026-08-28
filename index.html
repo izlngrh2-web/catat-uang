@@ -836,6 +836,52 @@ font-size:35px;
             }
         }
 
+        function openAccountDetail(id){
+
+    const acc = APP_DATA.accounts.find(a => a.id == id);
+
+    if(!acc){
+        alert("Data rekening tidak ditemukan");
+        return;
+    }
+
+
+    let masuk = 0;
+    let keluar = 0;
+
+
+    APP_DATA.transactions.forEach(tx=>{
+
+        if(tx.accountId == id){
+
+            if(tx.type === "income"){
+                masuk += Number(tx.amount);
+            }
+
+            if(tx.type === "expense"){
+                keluar += Number(tx.amount);
+            }
+
+        }
+
+    });
+
+
+    alert(
+`${acc.bank}
+
+Saldo:
+${formatRupiah(acc.balance)}
+
+Pemasukan:
+${formatRupiah(masuk)}
+
+Pengeluaran:
+${formatRupiah(keluar)}`
+    );
+
+}
+
         function checkBudgetWarning(currentMonth) {
             const targetAnggaran = APP_DATA.targetAnggaran || 0;
             if (targetAnggaran <= 0) return;
@@ -1132,56 +1178,7 @@ document.getElementById('home-account-list')
 
 }
 
-        function openAccountDetail(accountId){
-
-    const acc = APP_DATA.accounts.find(a => a.id == accountId);
-
-    if(!acc){
-        showCustomAlert("Rekening tidak ditemukan");
-        return;
-    }
-
-
-    let totalIn = 0;
-    let totalOut = 0;
-
-
-    APP_DATA.transactions.forEach(tx=>{
-
-        if(
-            tx.accountId == accountId ||
-            tx.account == accountId
-        ){
-
-            if(tx.type==="income"){
-                totalIn += Number(tx.amount);
-            }
-
-            if(tx.type==="expense"){
-                totalOut += Number(tx.amount);
-            }
-
-        }
-
-    });
-
-
-    showCustomAlert(
-`
-${acc.bank}
-
-Saldo :
-${formatRupiah(acc.balance)}
-
-Total Masuk :
-${formatRupiah(totalIn)}
-
-Total Keluar :
-${formatRupiah(totalOut)}
-`
-    );
-
-}
+        
         
         function quickTransaction(type){
 
