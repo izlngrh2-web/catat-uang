@@ -87,7 +87,7 @@
 
     <div id="app-container">
         <div class="header">
-            <h2 id="header-title">Riwayat Transaksi</h2>
+            <h2 id="header-title">Financial Report</h2>
             <button onclick="logout()" style="position:absolute; right:15px; top:15px; background:none; border:none; font-weight:600; cursor:pointer; color:var(--danger); font-size: 13px;">Keluar</button>
         </div>
 
@@ -601,8 +601,8 @@ font-size:35px;
                 </div>
                 <div id="list-kategori-setting"></div>
             </div>
+        </div>
         
-
         <div class="bottom-nav">
             <div class="nav-item active" onclick="switchTab('home', this)"><span class="nav-icon">🏠</span>Beranda</div>
             <div class="nav-item" onclick="switchTab('riwayat', this)"><span class="nav-icon">📝</span>Transaksi</div>
@@ -613,11 +613,7 @@ font-size:35px;
             <div class="nav-item" onclick="switchTab('laporan', this)"><span class="nav-icon">📄</span>Laporan</div>
             <div class="nav-item" onclick="switchTab('saya', this)"><span class="nav-icon">👤</span>Saya</div>
         </div>
-        </div>
-    
-    
-    
-
+        
     <!-- MODAL TRANSAKSI -->
     <div class="modal" id="modalTx">
         <div class="modal-content">
@@ -724,6 +720,7 @@ font-size:35px;
             <p id="budget-alert-text" style="font-size: 15px; margin-bottom: 20px; font-weight: 600; line-height: 1.4;"></p>
             <button type="button" class="btn" style="background: var(--primary); margin-bottom: 0;" onclick="closeBudgetAlert()">Mengerti</button>
         </div>
+    </div>
     </div>
 
     <script>
