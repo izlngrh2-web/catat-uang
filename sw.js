@@ -1,4 +1,4 @@
-const CACHE_NAME = 'catat-uang-dynamic-v1';
+const CACHE_NAME = 'catat-uang-dynamic-v2';
 
 // Saat instalasi, langsung aktifkan service worker
 self.addEventListener('install', (event) => {
