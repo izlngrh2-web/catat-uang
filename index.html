@@ -402,7 +402,8 @@ margin:0 0 12px;
 
 
 <div id="home-goal">
-Belum ada target
+</div>
+        Belum ada target
       <button 
 class="btn"
 onclick="openGoalModal()">
@@ -410,7 +411,6 @@ onclick="openGoalModal()">
 + Tambah Target
 
 </button>
-</div>
   
 
 
@@ -740,6 +740,20 @@ Sync Data
                      <option value="">Pilih Kategori...</option>
                  </select>
 
+                 <div id="tx-goal-wrapper">
+
+<label>
+Target Tabungan (opsional)
+</label>
+
+<select id="tx-goal">
+<option value="">
+Tanpa Target
+</option>
+</select>
+
+</div>
+
                 <input type="text" id="tx-desc" placeholder="Keterangan..." required>
                 <input type="number" id="tx-amount" placeholder="Nominal (Rp)" required>
                 <input type="date" id="tx-date" required>
@@ -920,6 +934,55 @@ Batal
 </div>
 
 </div>
+
+        <div class="modal" id="modalEditGoal">
+
+<div class="modal-content">
+
+<h3>Edit Target</h3>
+
+
+<input 
+type="hidden"
+id="edit-goal-id">
+
+
+<input
+id="edit-goal-name"
+placeholder="Nama target">
+
+
+<input
+type="number"
+id="edit-goal-target"
+placeholder="Target dana">
+
+
+<button
+class="btn"
+onclick="updateGoal()">
+
+Simpan
+
+</button>
+
+
+<button
+class="btn"
+style="background:#ddd;color:#111"
+onclick="
+document.getElementById('modalEditGoal').style.display='none'
+">
+
+Batal
+
+</button>
+
+
+</div>
+
+</div>
+        
     </div>
 
     <script>
@@ -2248,74 +2311,133 @@ APP_DATA.transactions
 
         function renderGoal(){
 
-let goals = APP_DATA.goals || [];
+    let goals = APP_DATA.goals || [];
 
-let box =
-document.getElementById(
-"home-goal"
-);
+    let box = document.getElementById("home-goal");
 
 
-if(goals.length === 0){
+    if(goals.length === 0){
 
-box.innerHTML =
-"Belum ada target";
+        box.innerHTML = `
+        <div style="
+        text-align:center;
+        color:var(--text-muted);
+        ">
+        Belum ada target
+        </div>
+        `;
 
-return;
+        return;
+    }
+
+
+    let html = "";
+
+
+    goals.forEach(goal=>{
+
+
+        let persen =
+        goal.target > 0
+        ?
+        Math.min(
+            Math.round(
+                goal.current / goal.target * 100
+            ),
+            100
+        )
+        :
+        0;
+
+
+
+        html += `
+
+        <div class="card"
+        style="
+        margin-bottom:12px;
+        ">
+
+
+        <div style="
+        display:flex;
+        justify-content:space-between;
+        font-weight:700;
+        ">
+
+        <span>
+        ${goal.name}
+        </span>
+
+
+        <span>
+        ${persen}%
+        </span>
+
+        </div>
+
+
+
+        <div style="
+        margin-top:10px;
+        font-size:13px;
+        ">
+        <button
+class="btn"
+onclick="openEditGoal('${goal.id}')">
+
+Edit
+
+</button>
+        <button
+class="btn"
+onclick="deleteGoal('${goal.id}')">
+
+Hapus
+
+</button>
+
+        ${formatRupiah(goal.current)}
+        /
+        ${formatRupiah(goal.target)}
+
+        </div>
+
+
+
+        <div style="
+        height:10px;
+        background:#E2E8F0;
+        border-radius:10px;
+        margin-top:10px;
+        ">
+
+
+        <div style="
+        width:${persen}%;
+        height:100%;
+        background:#10B981;
+        border-radius:10px;
+        ">
+        </div>
+
+
+        </div>
+
+
+        </div>
+
+        `;
+
+
+    });
+
+
+
+    box.innerHTML = html;
 
 }
-
-
-let goal = goals[0];
-
-
-let persen =
-Math.min(
-Math.round(
-goal.current / goal.target * 100
-),
-100
-);
-
-
-box.innerHTML = `
-
-<b>${goal.name}</b>
-
-<br><br>
-
-${formatRupiah(goal.current)}
-/
-${formatRupiah(goal.target)}
-
-
-<div style="
-height:10px;
-background:#E2E8F0;
-border-radius:10px;
-margin-top:10px;
-">
-
-<div style="
-width:${persen}%;
-height:100%;
-background:#10B981;
-border-radius:10px;
-"></div>
-
-</div>
-
-
-<div style="
-font-size:12px;
-margin-top:8px;
-">
-Progress ${persen}%
-</div>
-
-`;
-
-}
+        
         function openGoalModal(){
 
 document.getElementById(
@@ -2774,9 +2896,21 @@ renderGoal();
             const type = document.getElementById('tx-type').value;
             const cat = document.getElementById('tx-cat');
             const tujuan = document.getElementById('tx-to-account');
+            const goal = document.getElementById('tx-goal-wrapper');
 
               if(!cat || !tujuan) return;
 
+              if(type==="expense"){
+
+    goal.style.display="block";
+
+}else{
+
+    goal.style.display="none";
+
+    document.getElementById('tx-goal').value="";
+
+}
 
               if(type === "transfer"){
 
@@ -2823,6 +2957,8 @@ renderGoal();
 
              populateTransferAccounts();
 
+             populateGoals();
+
              updateTxTypeUI();
 
 
@@ -2840,6 +2976,7 @@ renderGoal();
             populateCategories();
             populateAccounts();
             populateTransferAccounts();
+            populateGoals();
 
             document.getElementById('tx-account').value = tx.accountId;
             document.getElementById('tx-to-account').value = tx.toAccountId || "";
@@ -2847,6 +2984,7 @@ renderGoal();
             document.getElementById('tx-desc').value = tx.desc;
             document.getElementById('tx-amount').value = tx.amount;
             document.getElementById('tx-date').value = tx.date;
+            document.getElementById('tx-goal').value = tx.goal_id || "";
 
             updateTxTypeUI();
             document.getElementById('modalTx').style.display = 'flex';
@@ -2917,17 +3055,31 @@ renderGoal();
             const txDate = document.getElementById('tx-date').value;
 
             const res = await callAPI({
-                action: txId ? 'editTransaksi' : 'simpanTransaksi',
-                userId: CURRENT_USER,
-                id: txId,
-                type: type,
-                accountId: document.getElementById('tx-account').value,
-                toAccountId: type === 'transfer' ? document.getElementById('tx-to-account').value : '',
-                category: type === 'transfer' ? 'Transfer' : document.getElementById('tx-cat').value,
-                desc: document.getElementById('tx-desc').value,
-                amount: document.getElementById('tx-amount').value,
-                date: txDate
-            });
+    action: txId ? 'editTransaksi' : 'simpanTransaksi',
+    userId: CURRENT_USER,
+    id: txId,
+    type: type,
+
+    accountId: document.getElementById('tx-account').value,
+
+    toAccountId: type === 'transfer'
+    ? document.getElementById('tx-to-account').value
+    : '',
+                
+    goalId: document.getElementById('tx-goal').value,
+
+    category: type === 'transfer'
+    ? 'Transfer'
+    : document.getElementById('tx-cat').value,
+
+    desc: document.getElementById('tx-desc').value,
+
+    amount: document.getElementById('tx-amount').value,
+
+    date: txDate,
+
+    goalId: document.getElementById('tx-goal').value,
+});
 
             btn.innerText = 'Simpan';
             btn.disabled = false;
@@ -3175,6 +3327,180 @@ document.getElementById(
 "modalCategoryBudget"
 ).style.display="flex";
 
+
+        }
+
+        function openEditGoal(id){
+
+const goal =
+APP_DATA.goals.find(
+g=>g.id===id
+);
+
+
+if(!goal) return;
+
+
+document.getElementById(
+"edit-goal-id"
+).value = goal.id;
+
+
+document.getElementById(
+"edit-goal-name"
+).value = goal.name;
+
+
+document.getElementById(
+"edit-goal-target"
+).value = goal.target;
+
+
+
+document.getElementById(
+"modalEditGoal"
+).style.display="flex";
+
+}
+
+        async function updateGoal(){
+
+
+const id =
+document.getElementById(
+"edit-goal-id"
+).value;
+
+
+const name =
+document.getElementById(
+"edit-goal-name"
+).value;
+
+
+const target =
+document.getElementById(
+"edit-goal-target"
+).value;
+
+
+
+const res =
+await callAPI({
+
+action:"editGoal",
+
+userId:CURRENT_USER,
+
+id:id,
+
+name:name,
+
+target:target
+
+});
+
+
+
+if(res.success){
+
+showAlert(
+"Target berhasil diperbarui"
+);
+
+
+document.getElementById(
+"modalEditGoal"
+).style.display="none";
+
+
+await initApp();
+
+
+}else{
+
+showAlert(
+res.message
+);
+
+}
+
+
+}
+
+        async function deleteGoal(id){
+
+const yakin =
+confirm(
+"Yakin ingin menghapus target ini?"
+);
+
+
+if(!yakin) return;
+
+
+const res =
+await callAPI({
+
+action:"hapusGoal",
+
+userId:CURRENT_USER,
+
+id:id
+
+});
+
+
+if(res.success){
+
+showAlert(
+"Target berhasil dihapus"
+);
+
+
+await initApp();
+
+
+}else{
+
+showAlert(
+res.message
+);
+
+}
+
+}
+
+        function populateGoals(){
+
+    const select =
+    document.getElementById('tx-goal');
+
+
+    if(!select) return;
+
+
+    select.innerHTML =
+    `
+    <option value="">
+    Tanpa Target
+    </option>
+    `;
+
+
+    if(!APP_DATA.goals) return;
+
+
+    APP_DATA.goals.forEach(goal=>{
+
+        select.innerHTML +=
+        `
+        <option value="${goal.id}">
+            ${goal.name}
+        </option>
+        `;
+
+    });
 
 }
         
