@@ -1484,24 +1484,30 @@
 
             let html = "";
             goals.forEach(goal => {
-                let persen = 0;
+                let persenWidth = 0;
+                let persenText = "0";
+
                 if (goal.target > 0) {
-                    persen = Math.min(Math.round((goal.current / goal.target) * 100), 100);
+                    let rawPersen = (goal.current / goal.target) * 100;
+                    persenWidth = Math.min(rawPersen, 100); // Untuk lebar progress bar
+                    
+                    // Format teks: maksimal 2 angka di belakang koma, angka genap tidak ada koma (contoh: 0.17 atau 50)
+                    persenText = Number(Math.min(rawPersen, 100).toFixed(2));
                 }
 
                 html += `
                 <div class="card" style="padding:15px; margin-bottom:12px;">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <b>${goal.name}</b>
-                        <b>${persen}%</b>
+                        <b>${persenText}%</b>
                     </div>
                     <div style="margin-top:12px; font-size:13px;">${formatRupiah(goal.current)} / ${formatRupiah(goal.target)}</div>
                     <div style="height:10px; background:#E2E8F0; border-radius:10px; margin-top:10px; overflow:hidden;">
-                        <div style="width:${persen}%; height:100%; background:#10B981;"></div>
+                        <div style="width:${persenWidth}%; height:100%; background:#10B981;"></div>
                     </div>
                     <div style="display:flex; gap:8px; margin-top:12px;">
-                        <button onclick="editGoal('${goal.id}')" style="flex:1;">Edit</button>
-                        <button onclick="hapusGoal('${goal.id}')" style="flex:1;">Hapus</button>
+                        <button onclick="editGoal('${goal.id}')" style="flex:1; padding:8px; border:none; border-radius:6px; background:#E2E8F0; font-weight:600; cursor:pointer;">Edit</button>
+                        <button onclick="hapusGoal('${goal.id}')" style="flex:1; padding:8px; border:none; border-radius:6px; background:#E2E8F0; font-weight:600; cursor:pointer;">Hapus</button>
                     </div>
                 </div>`;
             });
@@ -2593,7 +2599,7 @@
             // Tabel 4: Progres Target Keuangan
             if (APP_DATA.goals && APP_DATA.goals.length > 0) {
                 let goalBody = APP_DATA.goals.map(g => {
-                    let progres = g.target > 0 ? Math.round((g.current / g.target) * 100) : 0;
+                    let progres = g.target > 0 ? Number(((g.current / g.target) * 100).toFixed(2)) : 0;
                     return [g.name, formatRp(g.current), formatRp(g.target), progres + '%'];
                 });
 
