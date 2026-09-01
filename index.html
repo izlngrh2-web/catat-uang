@@ -403,17 +403,6 @@ margin:0 0 12px;
 
 <div id="home-goal">
 </div>
-        Belum ada target
-      <button 
-class="btn"
-onclick="openGoalModal()">
-
-+ Tambah Target
-
-</button>
-  
-
-
 </div>
             
     <!-- QUICK ACTION -->
@@ -2352,14 +2341,14 @@ APP_DATA.transactions
     goals.forEach(goal=>{
 
 
-        let persen =
-        Math.min(
-            Math.min(
-        Math.round(goal.current / goal.target * 100),
+      let persen = 0;
+
+if(goal.target > 0){
+    persen = Math.min(
+        Math.round((goal.current / goal.target) * 100),
         100
-    )
-    :
-    0;
+    );
+}
 
         html += `
 
@@ -2933,7 +2922,7 @@ renderGoal();
             const tujuan = document.getElementById('tx-to-account');
             const goal = document.getElementById('tx-goal-wrapper');
 
-              if(!cat || !tujuan) return;
+              if(!cat || !tujuan || !goal) return;
 
               if(type==="expense"){
 
