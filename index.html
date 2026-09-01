@@ -1019,6 +1019,7 @@ showApp();
                 document.getElementById('filter-month').value =
                     new Date().toISOString().slice(0,7);
                 renderSyncStatus();
+                renderGoal();
                 renderRiwayat();
                 populateCategories();
                 populateAccounts();
@@ -1057,6 +1058,7 @@ showApp();
         renderCategorySettings();
         loadTargetAnggaran();
         renderSyncStatus();
+        renderGoal();
 
 
     }else{
@@ -1270,7 +1272,7 @@ warningKey,
 
 
     // Hitung saldo rekening
-    APP_DATA.accounts.forEach(acc=>{
+    (APP_DATA.accounts || []).forEach(acc=>{
         totalSaldo += Number(acc.balance || 0);
     });
 
@@ -1282,7 +1284,7 @@ warningKey,
     const year = now.getFullYear();
 
 
-    APP_DATA.transactions.forEach(tx=>{
+    (APP_DATA.transactions || []).forEach(tx=>{
 
         const date = new Date(tx.date);
 
@@ -1292,11 +1294,11 @@ warningKey,
         ){
 
             if(tx.type === "income"){
-                totalIncome += Number(tx.amount);
+                totalIncome += Number(tx.amount) || 0;
             }
 
             if(tx.type === "expense"){
-                totalExpense += Number(tx.amount);
+                totalExpense += Number(tx.amount) || 0;
             }
 
         }
@@ -1320,7 +1322,7 @@ warningKey,
     // Rekening versi upgrade
 let htmlRek = "";
 
-APP_DATA.accounts.forEach(acc=>{
+(APP_DATA.accounts || []).forEach(acc=>{
 
     let icon = "💳";
 
@@ -1426,9 +1428,10 @@ const iconMap = {
 };
 
 
-APP_DATA.transactions
-.slice()
-.reverse()
+[...APP_DATA.transactions]
+.sort(
+(a,b)=>new Date(b.date)-new Date(a.date)
+)
 .slice(0,5)
 .forEach(tx=>{
 
@@ -1530,7 +1533,8 @@ if(isTransfer){
             width:42px;
             height:42px;
             border-radius:14px;
-            background:${isIncome ? '#DCFCE7':'#FEE2E2'};
+            background:${isTransfer? '#DBEAFE': 
+                         isIncome? '#DCFCE7': '#FEE2E2'};
             display:flex;
             align-items:center;
             justify-content:center;
@@ -2010,7 +2014,7 @@ box.innerHTML=
         function renderFinancialScore(){
 
     let saldo =
-    APP_DATA.accounts.reduce(
+    (APP_DATA.accounts || []).reduce(
         (a,b)=>a+Number(b.balance || 0),
         0
     );
@@ -2023,7 +2027,7 @@ box.innerHTML=
     const now = new Date();
 
 
-    APP_DATA.transactions.forEach(t=>{
+    (APP_DATA.transactions || []).forEach(t=>{
 
         let d=new Date(t.date);
 
@@ -2085,9 +2089,7 @@ box.innerHTML=
     // BUDGET
 
     let budget =
-    Number(
-    localStorage.getItem("targetAnggaran")
-    )||0;
+Number(APP_DATA.targetAnggaran)||0;
 
 
     if(budget){
@@ -2117,9 +2119,18 @@ box.innerHTML=
     // transaksi aktif
 
     let hariAktif =
-    new Set(
-        APP_DATA.transactions.map(t=>t.date)
-    ).size;
+new Set(
+APP_DATA.transactions
+.filter(t=>{
+    let d=new Date(t.date);
+
+    return d.getMonth()===now.getMonth()
+    &&
+    d.getFullYear()===now.getFullYear();
+
+})
+.map(t=>t.date)
+).size;
 
 
     if(hariAktif>=10)
@@ -2184,81 +2195,79 @@ box.innerHTML=
 
         function renderGoal(){
 
-let data =
-localStorage.getItem(
-"goal_"+CURRENT_USER
-);
+    let box =
+    document.getElementById(
+        "home-goal"
+    );
 
 
-let box =
-document.getElementById(
-"home-goal"
-);
+    let goals =
+    APP_DATA.goals || [];
 
 
-if(!data){
+    if(goals.length === 0){
 
-box.innerHTML=
-"Belum ada target";
+        box.innerHTML =
+        "Belum ada target";
 
-return;
+        return;
 
-}
-
-
-let goal =
-JSON.parse(data);
+    }
 
 
-
-let persen =
-Math.min(
-Math.round(
-goal.current/goal.target*100
-),
-100
-);
+    let goal = goals[0];
 
 
-
-box.innerHTML=`
-
-<b>${goal.name}</b>
-
-<br><br>
-
-${formatRupiah(goal.current)}
-/
-${formatRupiah(goal.target)}
-
-
-<div style="
-height:10px;
-background:#E2E8F0;
-border-radius:10px;
-margin-top:10px;
-">
-
-<div style="
-width:${persen}%;
-height:100%;
-background:#10B981;
-border-radius:10px;
-"></div>
+    let persen =
+    goal.target > 0
+    ?
+    Math.min(
+        Math.round(
+            goal.current / goal.target * 100
+        ),
+        100
+    )
+    :
+    0;
 
 
-</div>
+
+    box.innerHTML=`
+
+    <b>${goal.name}</b>
+
+    <br><br>
+
+    ${formatRupiah(goal.current)}
+    /
+    ${formatRupiah(goal.target)}
 
 
-<div style="
-font-size:12px;
-margin-top:8px;
-">
-Progress ${persen}%
-</div>
+    <div style="
+    height="10px";
+    background:#E2E8F0;
+    border-radius:10px;
+    margin-top:10px;
+    ">
+
+        <div style="
+        width:${persen}%;
+        height:100%;
+        background:#10B981;
+        border-radius:10px;
+        "></div>
+
+    </div>
 
 
-`;
+    <div style="
+    font-size:12px;
+    margin-top:8px;
+    ">
+    Progress ${persen}%
+    </div>
+
+    `;
 
 }
         
