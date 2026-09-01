@@ -2195,79 +2195,72 @@ APP_DATA.transactions
 
         function renderGoal(){
 
-    let box =
-    document.getElementById(
-        "home-goal"
-    );
+let goals = APP_DATA.goals || [];
+
+let box =
+document.getElementById(
+"home-goal"
+);
 
 
-    let goals =
-    APP_DATA.goals || [];
+if(goals.length === 0){
+
+box.innerHTML =
+"Belum ada target";
+
+return;
+
+}
 
 
-    if(goals.length === 0){
-
-        box.innerHTML =
-        "Belum ada target";
-
-        return;
-
-    }
+let goal = goals[0];
 
 
-    let goal = goals[0];
+let persen =
+Math.min(
+Math.round(
+goal.current / goal.target * 100
+),
+100
+);
 
 
-    let persen =
-    goal.target > 0
-    ?
-    Math.min(
-        Math.round(
-            goal.current / goal.target * 100
-        ),
-        100
-    )
-    :
-    0;
+box.innerHTML = `
+
+<b>${goal.name}</b>
+
+<br><br>
+
+${formatRupiah(goal.current)}
+/
+${formatRupiah(goal.target)}
 
 
+<div style="
+height:10px;
+background:#E2E8F0;
+border-radius:10px;
+margin-top:10px;
+">
 
-    box.innerHTML=`
+<div style="
+width:${persen}%;
+height:100%;
+background:#10B981;
+border-radius:10px;
+"></div>
 
-    <b>${goal.name}</b>
-
-    <br><br>
-
-    ${formatRupiah(goal.current)}
-    /
-    ${formatRupiah(goal.target)}
-
-
-    <div style="
-    height="10px";
-    background:#E2E8F0;
-    border-radius:10px;
-    margin-top:10px;
-    ">
-
-        <div style="
-        width:${persen}%;
-        height:100%;
-        background:#10B981;
-        border-radius:10px;
-        "></div>
-
-    </div>
+</div>
 
 
-    <div style="
-    font-size:12px;
-    margin-top:8px;
-    ">
-    Progress ${persen}%
-    </div>
+<div style="
+font-size:12px;
+margin-top:8px;
+">
+Progress ${persen}%
+</div>
 
-    `;
+`;
 
 }
         
