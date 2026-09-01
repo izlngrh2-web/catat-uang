@@ -403,7 +403,15 @@ margin:0 0 12px;
 
 <div id="home-goal">
 Belum ada target
+      <button 
+class="btn"
+onclick="openGoalModal()">
+
++ Tambah Target
+
+</button>
 </div>
+  
 
 
 </div>
@@ -867,6 +875,51 @@ Batal
             <button type="button" class="btn" style="background: var(--primary); margin-bottom: 0;" onclick="closeBudgetAlert()">Mengerti</button>
         </div>
     </div>
+
+        <div class="modal" id="modalGoal">
+
+<div class="modal-content">
+
+<h3>
+Tambah Target
+</h3>
+
+
+<input 
+id="goal-name"
+placeholder="Nama target">
+
+
+<input 
+type="number"
+id="goal-target"
+placeholder="Target dana">
+
+
+<button 
+class="btn"
+onclick="saveGoal()">
+
+Simpan
+
+</button>
+
+
+<button 
+class="btn"
+style="background:#ddd;color:#111"
+onclick="
+document.getElementById('modalGoal').style.display='none'
+">
+
+Batal
+
+</button>
+
+
+</div>
+
+</div>
     </div>
 
     <script>
@@ -2261,6 +2314,70 @@ Progress ${persen}%
 </div>
 
 `;
+
+}
+        function openGoalModal(){
+
+document.getElementById(
+"modalGoal"
+).style.display="flex";
+
+}
+        async function saveGoal(){
+
+
+const name =
+document.getElementById(
+"goal-name"
+).value;
+
+
+const target =
+document.getElementById(
+"goal-target"
+).value;
+
+
+
+const res = await callAPI({
+
+action:"simpanGoal",
+
+userId:CURRENT_USER,
+
+name:name,
+
+target:target
+
+});
+
+
+
+if(res.success){
+
+showAlert(
+"Target berhasil dibuat"
+);
+
+
+// refresh data
+
+await initApp();
+
+
+document.getElementById(
+"modalGoal"
+).style.display="none";
+
+
+}else{
+
+showAlert(
+res.message
+);
+
+}
+
 
 }
         
