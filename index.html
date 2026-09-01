@@ -2938,22 +2938,28 @@ renderGoal();
 
               if(type === "transfer"){
 
-                cat.style.display = "none";
-                cat.required = false;
+    cat.style.display="none";
+    tujuan.style.display="block";
 
-                tujuan.style.display = "block";
-                tujuan.required = true;
+    goal.style.display="none";
 
-              }else{
 
-                cat.style.display = "block";
-                cat.required = true;
+}else if(type === "expense"){
 
-                tujuan.style.display = "none";
-                tujuan.required = false;
-                tujuan.value = "";
+    cat.style.display="block";
+    tujuan.style.display="none";
 
-              } 
+    goal.style.display="block";
+
+
+}else{
+
+    cat.style.display="block";
+    tujuan.style.display="none";
+
+    goal.style.display="none";
+
+}
         }
 
         function openTxModal(){
@@ -3083,6 +3089,12 @@ renderGoal();
     userId: CURRENT_USER,
     id: txId,
     type: type,
+    goal_id:
+type === "expense"
+?
+document.getElementById('tx-goal').value
+:
+"",
 
     accountId: document.getElementById('tx-account').value,
 
