@@ -1435,27 +1435,20 @@ APP_DATA.transactions
 
     let icon = iconMap[tx.category || ""] || "💳";
 
-    let isIncome = tx.type === "income";
 
 
 let isIncome = tx.type === "income";
 let isTransfer = tx.type === "transfer";
 
-
-let warna =
-isIncome
-? "text-green"
-: isTransfer
-? "text-blue"
-: "text-red";
-
+let warna = 
+isTransfer 
+? "" 
+: (isIncome ? "text-green" : "text-red");
 
 let tanda =
-isIncome
-? "+"
-: isTransfer
+isTransfer
 ? "↔"
-: "-";
+: (isIncome ? "+" : "-");
 
 
     // Cari rekening
