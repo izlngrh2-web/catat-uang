@@ -10,6 +10,7 @@
     <link rel="apple-touch-icon" href="icon-192.png">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.7.1/jspdf.plugin.autotable.min.js"></script>
     <style>
         :root {
             --primary: #0F172A;
@@ -2535,54 +2536,92 @@
                 }
             });
 
-            let y = 20;
-            doc.setFontSize(16);
-            doc.text("Laporan Keuangan", 20, y);
-            y += 10;
+            // Judul dan Header Laporan
+            doc.setFontSize(18);
+            doc.setTextColor(15, 23, 42); // Warna Primary Dark
+            doc.text("Laporan Keuangan Pribadi", 14, 22);
             
-            doc.setFontSize(12);
-            doc.text("Periode : " + month, 20, y);
-            y += 15;
-            
-            doc.text("Pemasukan : " + formatRp(income), 20, y);
-            y += 8;
-            doc.text("Pengeluaran : " + formatRp(expense), 20, y);
-            y += 8;
-            doc.text("Selisih : " + formatRp(income - expense), 20, y);
-            y += 15;
-            
-            doc.text("Pengeluaran Berdasarkan Kategori:", 20, y);
-            y += 8;
+            doc.setFontSize(11);
+            doc.setTextColor(100);
+            doc.text("Periode Laporan : " + month, 14, 30);
+            doc.text("Dicetak pada    : " + new Date().toLocaleString('id-ID'), 14, 36);
 
-            Object.keys(categories).forEach(cat => {
-                doc.text(cat + " : " + formatRp(categories[cat]), 25, y);
-                y += 7;
-                if (y > 280) {
-                    doc.addPage();
-                    y = 20;
-                }
+            // Tabel 1: Ringkasan Arus Kas
+            doc.autoTable({
+                startY: 45,
+                head: [['Ringkasan Arus Kas', 'Nominal']],
+                body: [
+                    ['Total Pemasukan', formatRp(income)],
+                    ['Total Pengeluaran', formatRp(expense)],
+                    ['Selisih (Net)', formatRp(income - expense)]
+                ],
+                theme: 'grid',
+                headStyles: { fillColor: '#0F172A', textColor: '#FFFFFF', fontStyle: 'bold' },
+                alternateRowStyles: { fillColor: '#F8FAFC' },
+                styles: { fontSize: 11, cellPadding: 6 }
             });
 
-            y += 10;
-            doc.text("Daftar Rekening:", 20, y);
-            y += 8;
+            // Tabel 2: Detail Kategori Pengeluaran
+            let catBody = Object.keys(categories)
+                .sort((a, b) => categories[b] - categories[a]) // Urutkan dari pengeluaran terbesar
+                .map(cat => [cat, formatRp(categories[cat])]);
 
-            APP_DATA.accounts.forEach(acc => {
-                doc.text(acc.bank + " : " + formatRp(acc.balance), 25, y);
-                y += 7;
-            });
-
-            y += 10;
-            if (APP_DATA.goals) {
-                doc.text("Target Keuangan:", 20, y);
-                y += 8;
-                APP_DATA.goals.forEach(goal => {
-                    doc.text(goal.name + " : " + formatRp(goal.current) + " / " + formatRp(goal.target), 25, y);
-                    y += 7;
+            if (catBody.length > 0) {
+                doc.autoTable({
+                    startY: doc.lastAutoTable.finalY + 12,
+                    head: [['Kategori Pengeluaran', 'Total Pengeluaran']],
+                    body: catBody,
+                    theme: 'striped',
+                    headStyles: { fillColor: '#10B981', textColor: '#FFFFFF' }, // Warna Accent Hijau
+                    styles: { fontSize: 10, cellPadding: 5 }
                 });
             }
 
-            doc.save("Laporan-" + month + ".pdf");
+            // Tabel 3: Status Rekening & Saldo Akhir
+            let rekBody = APP_DATA.accounts.map(acc => [acc.bank, acc.name, formatRp(acc.balance)]);
+            if (rekBody.length > 0) {
+                doc.autoTable({
+                    startY: doc.lastAutoTable ? doc.lastAutoTable.finalY + 12 : 45,
+                    head: [['Rekening / Dompet', 'Atas Nama', 'Saldo Tersedia']],
+                    body: rekBody,
+                    theme: 'striped',
+                    headStyles: { fillColor: '#3B82F6', textColor: '#FFFFFF' }, // Warna Biru
+                    styles: { fontSize: 10, cellPadding: 5 }
+                });
+            }
+
+            // Tabel 4: Progres Target Keuangan
+            if (APP_DATA.goals && APP_DATA.goals.length > 0) {
+                let goalBody = APP_DATA.goals.map(g => {
+                    let progres = g.target > 0 ? Math.round((g.current / g.target) * 100) : 0;
+                    return [g.name, formatRp(g.current), formatRp(g.target), progres + '%'];
+                });
+
+                doc.autoTable({
+                    startY: doc.lastAutoTable.finalY + 12,
+                    head: [['Target Keuangan', 'Dana Terkumpul', 'Target Dana', 'Progres']],
+                    body: goalBody,
+                    theme: 'striped',
+                    headStyles: { fillColor: '#F59E0B', textColor: '#FFFFFF' }, // Warna Kuning/Orange
+                    styles: { fontSize: 10, cellPadding: 5 }
+                });
+            }
+
+            // Footer: Nomor Halaman Otomatis
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(9);
+                doc.setTextColor(150);
+                doc.text(
+                    'Halaman ' + i + ' dari ' + pageCount + '  |  Digenerate otomatis oleh Catat Uang App', 
+                    14, 
+                    doc.internal.pageSize.height - 10
+                );
+            }
+
+            // Unduh file PDF
+            doc.save("Laporan-Keuangan-" + month + ".pdf");
         }
     </script>
 </body>
