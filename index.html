@@ -2311,126 +2311,157 @@ APP_DATA.transactions
 
         function renderGoal(){
 
-    let goals = APP_DATA.goals || [];
+    const box =
+    document.getElementById("home-goal");
 
-    let box = document.getElementById("home-goal");
+
+    if(!box) return;
+
+
+    const goals =
+    APP_DATA.goals || [];
 
 
     if(goals.length === 0){
 
         box.innerHTML = `
+
         <div style="
         text-align:center;
         color:var(--text-muted);
+        padding:15px;
         ">
         Belum ada target
         </div>
+
+        <button class="btn-primary"
+        onclick="openGoalModal()">
+        + Tambah Target
+        </button>
+
         `;
 
         return;
     }
 
 
-    let html = "";
+
+    let html="";
 
 
     goals.forEach(goal=>{
 
 
         let persen =
-        goal.target > 0
-        ?
         Math.min(
-            Math.round(
-                goal.current / goal.target * 100
-            ),
-            100
-        )
-        :
-        0;
-
+            (goal.current / goal.target * 100).toFixed(1)
 
 
         html += `
 
         <div class="card"
         style="
+        padding:15px;
         margin-bottom:12px;
         ">
 
 
-        <div style="
-        display:flex;
-        justify-content:space-between;
-        font-weight:700;
-        ">
+            <div style="
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            ">
 
-        <span>
-        ${goal.name}
-        </span>
-
-
-        <span>
-        ${persen}%
-        </span>
-
-        </div>
+                <b>
+                ${goal.name}
+                </b>
 
 
+                <b>
+                ${persen}%
+                </b>
 
-        <div style="
-        margin-top:10px;
-        font-size:13px;
-        ">
-        <button
-class="btn"
-onclick="openEditGoal('${goal.id}')">
 
-Edit
-
-</button>
-        <button
-class="btn"
-onclick="deleteGoal('${goal.id}')">
-
-Hapus
-
-</button>
-
-        ${formatRupiah(goal.current)}
-        /
-        ${formatRupiah(goal.target)}
-
-        </div>
+            </div>
 
 
 
-        <div style="
-        height:10px;
-        background:#E2E8F0;
-        border-radius:10px;
-        margin-top:10px;
-        ">
+            <div style="
+            margin-top:12px;
+            font-size:13px;
+            ">
+
+            ${formatRupiah(goal.current)}
+            /
+            ${formatRupiah(goal.target)}
+
+            </div>
 
 
-        <div style="
-        width:${persen}%;
-        height:100%;
-        background:#10B981;
-        border-radius:10px;
-        ">
-        </div>
+
+            <div style="
+            height:10px;
+            background:#E2E8F0;
+            border-radius:10px;
+            margin-top:10px;
+            overflow:hidden;
+            ">
+
+                <div style="
+                width:${persen}%;
+                height:100%;
+                background:#10B981;
+                ">
+                </div>
 
 
-        </div>
+            </div>
+
+
+
+            <div style="
+            display:flex;
+            gap:8px;
+            margin-top:12px;
+            ">
+
+                <button
+                onclick="editGoal('${goal.id}')"
+                style="
+                flex:1;
+                ">
+                Edit
+                </button>
+
+
+                <button
+                onclick="hapusGoal('${goal.id}')"
+                style="
+                flex:1;
+                ">
+                Hapus
+                </button>
+
+
+            </div>
 
 
         </div>
 
         `;
 
-
     });
+
+
+
+    html += `
+
+    <button class="btn-primary"
+    onclick="openGoalModal()">
+    + Tambah Target
+    </button>
+
+    `;
 
 
 
