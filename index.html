@@ -2354,8 +2354,12 @@ APP_DATA.transactions
 
         let persen =
         Math.min(
-            Math.round(goal.current / goal.target * 100).toFixed(1)
-
+            Math.min(
+        Math.round(goal.current / goal.target * 100),
+        100
+    )
+    :
+    0;
 
         html += `
 
