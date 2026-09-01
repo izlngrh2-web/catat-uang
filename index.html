@@ -1052,13 +1052,22 @@ Batal
         
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <script>
         
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbz7f2VewwwWDyX5YJoDLcAH_0TdjRGWFayrHBxa3Io5D6Why5eb80QuGBXI2zVsJwKOLQ/exec';
 
         let CURRENT_USER = null;
         let isRegisterMode = false;
-        let APP_DATA = { transactions: [], categories: [], accounts: [], targetAnggaran: 0 };
+        let APP_DATA = { 
+ transactions: [],
+ categories: [],
+ accounts: [],
+ targetAnggaran: 0,
+ goals: [],
+ categoryBudgets: []
+};
         let chartInstance = null;
         let trendChartInstance = null;
         let activeGType = 'expense', activeGPeriod = 'month';
