@@ -526,8 +526,31 @@ margin:0 0 12px;
             </div>
             <input type="month" id="g-filter-month" style="display:block;" onchange="renderGrafik()">
             <input type="number" id="g-filter-year" style="display:none;" value="2026" onchange="renderGrafik()">
+
+            <div class="summary-grid">
+
+<div class="card">
+<div>Pemasukan</div>
+<strong id="grafik-income">Rp0</strong>
+</div>
+
+
+<div class="card">
+<div>Pengeluaran</div>
+<strong id="grafik-expense">Rp0</strong>
+</div>
+
+
+<div class="card">
+<div>Selisih</div>
+<strong id="grafik-net">Rp0</strong>
+</div>
+
+</div>
             
             <div class="card"><canvas id="myChart"></canvas></div>
+            <h3 style="font-size:15px;font-weight:600; margin:20px 0 10px 0;">Trend Keuangan</h3>
+            <div class="card"><canvas id="trendChart"></canvas></div>
             <h3 style="font-size:15px; font-weight:600; margin: 20px 0 10px 0;">Top 5 Kategori</h3>
             <div id="list-top5" class="card"></div>
             <h3 style="font-size:15px; font-weight:600; margin: 20px 0 10px 0;">Semua Kategori</h3>
@@ -982,6 +1005,7 @@ Batal
         let isRegisterMode = false;
         let APP_DATA = { transactions: [], categories: [], accounts: [], targetAnggaran: 0 };
         let chartInstance = null;
+        let trendChartInstance = null;
         let activeGType = 'expense', activeGPeriod = 'month';
         let activeLPeriod = 'month';
 
@@ -1321,7 +1345,15 @@ warningKey,
 
     if(tab === 'home') renderDashboard();
 
-    if(tab === 'grafik') renderGrafik();
+    if(tab === "grafik"){
+
+setTimeout(()=>{
+
+        renderGrafik();
+
+    },100);
+
+}
 
     if(tab === 'laporan') renderLaporan();
 
@@ -2714,13 +2746,224 @@ ${formatRp(tx.amount)}
             document.getElementById('list-all-cat').innerHTML = sortedCats.map(c => `<div class="cat-list-item"><span>${c.name}</span><strong>${formatRp(c.total)}</strong></div>`).join('') || '<p style="color:var(--text-muted); font-size:13px;">Data kosong</p>';
 
             const ctx = document.getElementById('myChart').getContext('2d');
-            if(chartInstance) chartInstance.destroy();
-            chartInstance = new Chart(ctx, {
+            if(window.chartInstance){
+    window.chartInstance.destroy();
+}
+            window.chartInstance = new Chart(ctx,{
                 type: 'doughnut',
-                data: { labels: sortedCats.map(c => c.name), datasets: [{ data: sortedCats.map(c => c.total), backgroundColor: ['#0F172A', '#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'] }] },
+                data: { labels: sortedCats.map(c => c.name), datasets: [{ data: sortedCats.map(c => c.total), backgroundColor:
+sortedCats.map((c,i)=>
+[
+'#0F172A',
+'#10B981',
+'#3B82F6',
+'#F59E0B',
+'#EF4444',
+'#8B5CF6',
+'#EC4899',
+'#14B8A6'
+][i%8]
+) }] },
                 options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } } }
             });
+            renderTrendChart();
+            let income = 0;
+let expense = 0;
+
+APP_DATA.transactions.forEach(tx=>{
+
+    let d = new Date(tx.date);
+
+    let match = false;
+
+    if(activeGPeriod === "month"){
+        match =
+        tx.date.startsWith(val);
+    }
+    else{
+        match =
+        tx.date.startsWith(val);
+    }
+
+
+    if(match){
+
+        if(tx.type==="income")
+            income += Number(tx.amount);
+
+        if(tx.type==="expense")
+            expense += Number(tx.amount);
+
+    }
+
+});
+
+
+document.getElementById('grafik-income')
+.innerText = formatRp(income);
+
+
+document.getElementById('grafik-expense')
+.innerText = formatRp(expense);
+
+
+document.getElementById('grafik-net')
+.innerText = formatRp(income-expense);
+            
         }
+
+        function renderTrendChart(){
+
+    const canvas =
+    document.getElementById('trendChart');
+
+
+    if(!canvas) return;
+
+
+    const ctx =
+    canvas.getContext('2d');
+
+    const yearInput =
+document.getElementById('g-filter-year');
+
+if(!yearInput) return;
+
+const year = yearInput.value;
+
+
+    let income =
+    Array(12).fill(0);
+
+    let expense =
+    Array(12).fill(0);
+
+
+
+    APP_DATA.transactions.forEach(tx=>{
+
+        let date =
+        new Date(tx.date);
+
+
+        if(
+            date.getFullYear()
+            == Number(year)
+        ){
+
+            let month =
+            date.getMonth();
+
+
+            if(tx.type==="income"){
+
+                income[month] +=
+                Number(tx.amount);
+
+            }
+
+
+            if(tx.type==="expense"){
+
+                expense[month] +=
+                Number(tx.amount);
+
+            }
+
+        }
+
+    });
+
+    if(trendChartInstance){
+
+        trendChartInstance.destroy();
+
+    }
+
+
+
+    trendChartInstance =
+    new Chart(ctx,{
+
+        type:'bar',
+
+        data:{
+
+            labels:[
+                "Jan",
+                "Feb",
+                "Mar",
+                "Apr",
+                "Mei",
+                "Jun",
+                "Jul",
+                "Agu",
+                "Sep",
+                "Okt",
+                "Nov",
+                "Des"
+            ],
+
+
+            datasets:[
+
+            {
+                label:"Pemasukan",
+
+                data:income
+
+            },
+
+
+            {
+                label:"Pengeluaran",
+
+                data:expense
+
+            }
+
+            ]
+
+        },
+
+
+        options:{
+
+            responsive:true,
+
+
+            plugins:{
+
+                legend:{
+                    position:'bottom'
+                }
+
+            },
+
+
+            scales:{
+
+                y:{
+
+                    ticks:{
+
+                        callback:function(value){
+
+                            return formatRp(value);
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        }
+
+    });
+
+}
 
         function renderLaporan() {
             const val = activeLPeriod === 'month' ? document.getElementById('l-filter-month').value : document.getElementById('l-filter-year').value;
