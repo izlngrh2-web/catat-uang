@@ -9,7 +9,7 @@
     <meta name="theme-color" content="#0F172A">
     <link rel="apple-touch-icon" href="icon-192.png">
     
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         :root {
             --primary: #0F172A;
@@ -551,6 +551,40 @@ margin:0 0 12px;
             <div class="card"><canvas id="myChart"></canvas></div>
             <h3 style="font-size:15px;font-weight:600; margin:20px 0 10px 0;">Trend Keuangan</h3>
             <div class="card"><canvas id="trendChart"></canvas></div>
+            <h3 style="font-size:15px;font-weight:600; margin:20px 0 10px 0;">Analisis Pengeluaran</h3>
+            <div class="card" id="biggest-category">Memuat analisis...</div>
+            <h3 style="font-size:15px;font-weight:600; margin:20px 0 10px 0;">Perbandingan Bulan</h3>
+            <div class="card" id="monthly-comparison">Memuat analisis...</div>
+            <h3 style="
+font-size:15px;
+font-weight:600;
+margin:20px 0 10px 0;">
+Pola Pengeluaran
+</h3>
+
+<div class="card" id="expense-pattern">
+Memuat analisis...
+</div>
+            <h3 style="
+font-size:15px;
+font-weight:600;
+margin:20px 0 10px 0;">
+Prediksi Keuangan
+</h3>
+
+<div class="card" id="financial-prediction">
+Memuat prediksi...
+</div>
+            <h3 style="
+font-size:15px;
+font-weight:600;
+margin:20px 0 10px 0;">
+Financial Score
+</h3>
+
+<div class="card" id="financial-score-detail">
+Memuat skor...
+</div>
             <h3 style="font-size:15px; font-weight:600; margin: 20px 0 10px 0;">Top 5 Kategori</h3>
             <div id="list-top5" class="card"></div>
             <h3 style="font-size:15px; font-weight:600; margin: 20px 0 10px 0;">Semua Kategori</h3>
@@ -558,17 +592,38 @@ margin:0 0 12px;
         </div>
 
         <div id="view-laporan" class="view-section">
+            <div class="card" id="monthly-report">
+
+Memuat laporan...
+
+</div>
+            <div class="card" id="asset-report">
+
+Memuat aset...
+
+</div>
             <div class="sub-nav">
                 <div id="l-per-month" class="active" onclick="setLaporanPeriod('month')">Bulanan</div>
                 <div id="l-per-year" onclick="setLaporanPeriod('year')">Tahunan</div>
             </div>
-            <input type="month" id="l-filter-month" style="display:block;" onchange="renderLaporan()">
+            <input type="month" id="l-filter-month" style="display:block;" onchange="renderMonthlyReport()">
             <input type="number" id="l-filter-year" style="display:none;" value="2026" onchange="renderLaporan()">
 
             <div style="display: flex; background: #F1F5F9; border-radius: 10px; margin-bottom: 18px; overflow: hidden; padding: 4px; border: 1px solid var(--border-color);">
                 <div id="btn-sub-analisis" onclick="switchLaporanSub('analisis')" style="flex:1; text-align:center; padding:10px; cursor:pointer; font-weight:600; background:var(--primary); color:white; border-radius:8px; font-size: 13px;">Analisis</div>
                 <div id="btn-sub-rekening" onclick="switchLaporanSub('rekening')" style="flex:1; text-align:center; padding:10px; cursor:pointer; font-weight:500; color:var(--text-muted); font-size: 13px;">Rekening</div>
             </div>
+            <button 
+onclick="exportLaporanPDF()"
+class="btn-primary"
+style="
+width:100%;
+margin:15px 0;
+">
+
+📄 Export Laporan PDF
+
+</button>
 
             <div id="sub-laporan-analisis">
                 <div class="card">
@@ -1355,7 +1410,10 @@ setTimeout(()=>{
 
 }
 
-    if(tab === 'laporan') renderLaporan();
+    if(tab === 'laporan') 
+    renderLaporan();
+    renderMonthlyReport();
+    renderAssetReport();
 
     if(tab === 'saya') {
     renderAccountSettings();
@@ -2767,6 +2825,11 @@ sortedCats.map((c,i)=>
                 options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } } }
             });
             renderTrendChart();
+            renderBiggestCategory();
+            renderMonthlyComparison();
+            renderExpensePattern();
+            renderFinancialPrediction();
+            renderFinancialScoreDetail();
             let income = 0;
 let expense = 0;
 
@@ -2965,6 +3028,750 @@ const year = yearInput.value;
 
 }
 
+        function renderBiggestCategory(){
+
+    const box =
+    document.getElementById(
+        "biggest-category"
+    );
+
+
+    if(!box) return;
+
+
+
+    const now =
+    document.getElementById('g-filter-month').value;
+
+
+    let month =
+    now.toISOString()
+    .slice(0,7);
+
+
+
+    let categorySum = {};
+
+    let totalExpense = 0;
+
+
+
+    APP_DATA.transactions.forEach(tx=>{
+
+
+        if(
+            tx.type === "expense" &&
+            tx.date.startsWith(month)
+        ){
+
+            let cat =
+            tx.category || "Lainnya";
+
+
+            categorySum[cat] =
+            (categorySum[cat] || 0)
+            + Number(tx.amount);
+
+
+            totalExpense +=
+            Number(tx.amount);
+
+        }
+
+    });
+
+
+
+    let list =
+    Object.keys(categorySum)
+    .map(cat=>({
+
+        name:cat,
+
+        total:categorySum[cat]
+
+    }))
+
+
+    .sort(
+        (a,b)=>b.total-a.total
+    );
+
+
+
+    if(list.length===0){
+
+        box.innerHTML =
+        `
+        <div style="
+        color:var(--text-muted);
+        text-align:center;">
+        Belum ada pengeluaran bulan ini
+        </div>
+        `;
+
+        return;
+
+    }
+
+
+
+    const biggest =
+    list[0];
+
+
+    const persen =
+    totalExpense > 0
+    ?
+    Math.round(
+        biggest.total /
+        totalExpense *
+        100
+    )
+    :
+    0;
+
+
+
+    box.innerHTML =
+
+    `
+
+    <div style="
+    display:flex;
+    align-items:center;
+    gap:12px;
+    ">
+
+        <div style="
+        font-size:30px;">
+        ⚠️
+        </div>
+
+
+        <div>
+
+            <div style="
+            font-weight:700;">
+            Pengeluaran terbesar
+            </div>
+
+
+            <div>
+            ${biggest.name}
+            </div>
+
+
+            <div style="
+            color:var(--text-muted);
+            font-size:13px;
+            margin-top:5px;">
+            
+            ${formatRp(biggest.total)}
+            (${persen}% dari total)
+
+            </div>
+
+        </div>
+
+
+    </div>
+
+    `;
+
+
+}
+      
+        function renderMonthlyComparison(){
+
+    const box =
+    document.getElementById(
+        "monthly-comparison"
+    );
+
+    if(!box) return;
+
+
+    const now = new Date();
+
+
+    const thisMonth =
+    now.toISOString()
+    .slice(0,7);
+
+
+
+    const last =
+    new Date(
+        now.getFullYear(),
+        now.getMonth()-1,
+        1
+    );
+
+
+    const lastMonth =
+    last.getFullYear()
+    + "-"
+    + String(last.getMonth()+1)
+    .padStart(2,"0");
+
+
+
+    let current = 0;
+    let previous = 0;
+
+
+
+    APP_DATA.transactions.forEach(tx=>{
+
+        if(tx.type !== "expense")
+            return;
+
+
+        if(tx.date.startsWith(thisMonth)){
+
+            current += Number(tx.amount);
+
+        }
+
+
+        if(tx.date.startsWith(lastMonth)){
+
+            previous += Number(tx.amount);
+
+        }
+
+    });
+
+
+
+    let persen = 0;
+
+    if(previous > 0){
+
+        persen =
+        Math.round(
+            ((current-previous)
+            /previous)*100
+        );
+
+    }
+
+
+
+    let status;
+
+
+    if(current > previous){
+
+        status = 
+        `
+        <span class="text-red">
+        ⚠️ Naik ${persen}%
+        </span>
+        `;
+
+    }
+    else if(current < previous){
+
+        status =
+        `
+        <span class="text-green">
+        ✅ Turun ${Math.abs(persen)}%
+        </span>
+        `;
+
+    }
+    else{
+
+        status =
+        `
+        Stabil
+        `;
+
+    }
+
+
+
+    box.innerHTML = `
+
+    <div>
+        Bulan ini:
+        <b>${formatRp(current)}</b>
+    </div>
+
+
+    <div style="
+    margin-top:8px;">
+        Bulan lalu:
+        <b>${formatRp(previous)}</b>
+    </div>
+
+
+    <div style="
+    margin-top:12px;">
+        ${status}
+    </div>
+
+    `;
+
+}
+
+        function renderExpensePattern(){
+
+    const box =
+    document.getElementById(
+        "expense-pattern"
+    );
+
+    if(!box) return;
+
+
+    const month =
+    new Date()
+    .toISOString()
+    .slice(0,7);
+
+
+
+    let total = 0;
+    let count = 0;
+
+    let category = {};
+    let days = {};
+
+
+
+    APP_DATA.transactions.forEach(tx=>{
+
+
+        if(
+            tx.type !== "expense" ||
+            !tx.date.startsWith(month)
+        ){
+            return;
+        }
+
+
+        let amount =
+        Number(tx.amount);
+
+
+        total += amount;
+        count++;
+
+
+
+        let cat =
+        tx.category || "Lainnya";
+
+
+        category[cat] =
+        (category[cat] || 0)
+        + amount;
+
+
+
+        let day =
+        new Date(tx.date)
+        .toLocaleDateString(
+            "id-ID",
+            {
+                weekday:"long"
+            }
+        );
+
+
+        days[day] =
+        (days[day] || 0)
+        + 1;
+
+
+    });
+
+
+
+    if(count===0){
+
+        box.innerHTML =
+        "Belum ada data pengeluaran";
+
+        return;
+
+    }
+
+
+
+    let topCategory =
+    Object.keys(category)
+    .sort(
+        (a,b)=>
+        category[b]-category[a]
+    )[0];
+
+
+
+    let topDay =
+    Object.keys(days)
+    .sort(
+        (a,b)=>
+        days[b]-days[a]
+    )[0];
+
+
+
+    let avg =
+    total / count;
+
+
+
+    let persen =
+    Math.round(
+        category[topCategory]
+        /
+        total
+        *
+        100
+    );
+
+
+
+    box.innerHTML = `
+
+    <div>
+    🔹 Kategori dominan:
+    <b>${topCategory}</b>
+    (${persen}%)
+    </div>
+
+
+    <div style="margin-top:8px;">
+    📅 Hari paling aktif:
+    <b>${topDay}</b>
+    </div>
+
+
+    <div style="margin-top:8px;">
+    💰 Rata-rata transaksi:
+    <b>${formatRp(avg)}</b>
+    </div>
+
+    `;
+
+}
+
+        function renderFinancialPrediction(){
+
+    const box =
+    document.getElementById(
+        "financial-prediction"
+    );
+
+    if(!box) return;
+
+
+
+    const now =
+    new Date();
+
+
+    let monthlyExpense = [];
+
+
+
+    // Ambil 3 bulan terakhir
+
+    for(let i=1;i<=3;i++){
+
+        let d =
+        new Date(
+            now.getFullYear(),
+            now.getMonth()-i,
+            1
+        );
+
+
+        let month =
+        d.getFullYear()
+        + "-"
+        + String(d.getMonth()+1)
+        .padStart(2,"0");
+
+
+        let total = 0;
+
+
+        APP_DATA.transactions.forEach(tx=>{
+
+            if(
+                tx.type==="expense" &&
+                tx.date.startsWith(month)
+            ){
+
+                total += Number(tx.amount);
+
+            }
+
+        });
+
+
+        monthlyExpense.push(total);
+
+    }
+
+
+
+    let avgExpense =
+    monthlyExpense.reduce(
+        (a,b)=>a+b,
+        0
+    ) / monthlyExpense.length;
+
+
+
+    let saldo =
+    APP_DATA.accounts.reduce(
+        (a,b)=>
+        a + Number(b.balance || 0),
+        0
+    );
+
+
+
+    let prediction =
+    saldo - avgExpense;
+
+
+
+    let status;
+
+
+    if(prediction < 0){
+
+        status =
+        `
+        <span class="text-red">
+        ⚠️ Berpotensi defisit
+        </span>
+        `;
+
+    }
+    else if(prediction < avgExpense){
+
+        status =
+        `
+        <span style="color:#F59E0B">
+        ⚠️ Perlu mengontrol pengeluaran
+        </span>
+        `;
+
+    }
+    else{
+
+        status =
+        `
+        <span class="text-green">
+        ✅ Kondisi cukup aman
+        </span>
+        `;
+
+    }
+
+
+
+    box.innerHTML = `
+
+    <div>
+    Rata-rata pengeluaran:
+    <b>${formatRp(avgExpense)}</b>
+    </div>
+
+
+    <div style="margin-top:8px;">
+    Saldo sekarang:
+    <b>${formatRp(saldo)}</b>
+    </div>
+
+
+    <div style="margin-top:8px;">
+    Perkiraan sisa:
+    <b>${formatRp(prediction)}</b>
+    </div>
+
+
+    <div style="margin-top:12px;">
+    ${status}
+    </div>
+
+    `;
+
+}
+
+        function renderFinancialScoreDetail(){
+
+    const box =
+    document.getElementById(
+        "financial-score-detail"
+    );
+
+    if(!box) return;
+
+
+    let saldo =
+    APP_DATA.accounts.reduce(
+        (a,b)=>
+        a + Number(b.balance || 0),
+        0
+    );
+
+
+    let income = 0;
+    let expense = 0;
+
+
+    APP_DATA.transactions.forEach(tx=>{
+
+        if(tx.type==="income")
+            income += Number(tx.amount);
+
+        if(tx.type==="expense")
+            expense += Number(tx.amount);
+
+    });
+
+
+
+    let score = 0;
+
+    let notes = [];
+
+
+
+    // CASHFLOW
+
+    if(income > expense){
+
+        score += 20;
+
+        notes.push(
+        "✅ Pemasukan lebih besar dari pengeluaran"
+        );
+
+    }else{
+
+        score += 10;
+
+        notes.push(
+        "⚠️ Pengeluaran lebih besar dari pemasukan"
+        );
+
+    }
+
+
+
+    // SALDO
+
+    if(saldo > expense){
+
+        score += 30;
+
+        notes.push(
+        "✅ Saldo mampu menutup pengeluaran"
+        );
+
+    }else{
+
+        score += 10;
+
+        notes.push(
+        "⚠️ Saldo perlu ditingkatkan"
+        );
+
+    }
+
+
+
+    // GOAL
+
+    if(APP_DATA.goals &&
+       APP_DATA.goals.length > 0){
+
+        score += 20;
+
+        notes.push(
+        "✅ Memiliki target keuangan"
+        );
+
+    }else{
+
+        score += 5;
+
+        notes.push(
+        "⚠️ Belum memiliki target"
+        );
+
+    }
+
+
+
+    // TRANSAKSI AKTIF
+
+    let days =
+    new Set(
+        APP_DATA.transactions
+        .map(t=>t.date)
+    ).size;
+
+
+    if(days>=5){
+
+        score += 20;
+
+        notes.push(
+        "✅ Konsisten mencatat transaksi"
+        );
+
+    }else{
+
+        score += 10;
+
+        notes.push(
+        "⚠️ Kurang rutin mencatat transaksi"
+        );
+
+    }
+
+
+
+    score =
+    Math.min(score,100);
+
+
+
+    box.innerHTML = `
+
+    <div style="
+    font-size:28px;
+    font-weight:800;">
+    ${score}/100
+    </div>
+
+
+    <div style="
+    margin-top:15px;">
+    ${
+        notes.map(n=>
+        `<div style="margin:8px 0;">
+        ${n}
+        </div>`
+        ).join("")
+    }
+    </div>
+
+    `;
+
+}
+
         function renderLaporan() {
             const val = activeLPeriod === 'month' ? document.getElementById('l-filter-month').value : document.getElementById('l-filter-year').value;
             const data = getFilteredTx(activeLPeriod, val);
@@ -2981,6 +3788,7 @@ const year = yearInput.value;
                 }
                 // transfer tidak dihitung sebagai pemasukan/pengeluaran.
             });
+            renderAssetReport();
             let net = inc - exp;
 
             document.getElementById('stat-bln').innerText = activeLPeriod === 'month' ? (val ? val.split('-')[1] : 'Bln') : val;
@@ -2998,7 +3806,265 @@ const year = yearInput.value;
             document.getElementById('anggaran-tersisa').innerText = formatRp(sisaAnggaran);
             document.getElementById('anggaran-tersisa').className = sisaAnggaran < 0 ? 'text-red' : 'text-green';
             document.getElementById('anggaran-circle').innerText = persentase + '%';
+            
         }
+
+        function renderMonthlyReport(){
+
+    const box =
+    document.getElementById(
+        "monthly-report"
+    );
+
+
+    if(!box) return;
+
+
+
+    const month =
+    document.getElementById(
+        "l-filter-month"
+    ).value;
+
+
+
+    const data =
+    getFilteredTx(
+        "month",
+        month
+    );
+
+
+
+    let income = 0;
+    let expense = 0;
+
+    let category = {};
+
+
+
+    data.forEach(tx=>{
+
+
+        if(tx.type==="income"){
+
+            income += Number(tx.amount);
+
+        }
+
+
+        if(tx.type==="expense"){
+
+            expense += Number(tx.amount);
+
+
+
+            let cat =
+            tx.category || "Lainnya";
+
+
+            category[cat] =
+            (category[cat] || 0)
+            + Number(tx.amount);
+
+        }
+
+
+    });
+
+
+
+    let net =
+    income - expense;
+
+
+
+    let detail =
+    Object.keys(category)
+    .map(c=>({
+
+        name:c,
+
+        total:category[c]
+
+    }))
+
+    .sort(
+        (a,b)=>
+        b.total-a.total
+    );
+
+
+
+    let kategoriHtml =
+    detail.map(c=>`
+
+        <div class="cat-list-item">
+
+            <span>
+            ${c.name}
+            </span>
+
+            <strong>
+            ${formatRp(c.total)}
+            </strong>
+
+        </div>
+
+    `).join("");
+
+
+
+    box.innerHTML = `
+
+
+    <h3>
+    Laporan ${month}
+    </h3>
+
+
+    <div class="cat-list-item">
+
+        <span>
+        Pemasukan
+        </span>
+
+        <strong class="text-green">
+        ${formatRp(income)}
+        </strong>
+
+    </div>
+
+
+
+    <div class="cat-list-item">
+
+        <span>
+        Pengeluaran
+        </span>
+
+        <strong class="text-red">
+        ${formatRp(expense)}
+        </strong>
+
+    </div>
+
+
+
+    <div class="cat-list-item">
+
+        <span>
+        Selisih
+        </span>
+
+        <strong>
+        ${formatRp(net)}
+        </strong>
+
+    </div>
+
+
+
+    <hr>
+
+
+    <h4>
+    Detail Pengeluaran
+    </h4>
+
+
+    ${
+        kategoriHtml ||
+        "Tidak ada pengeluaran"
+    }
+
+
+    `;
+
+
+}
+
+        function renderAssetReport(){
+
+    const box =
+    document.getElementById(
+        "asset-report"
+    );
+
+
+    if(!box) return;
+
+
+    let total = 0;
+
+
+    let html = "";
+
+
+    APP_DATA.accounts.forEach(acc=>{
+
+
+        let saldo =
+        Number(acc.balance || 0);
+
+
+        total += saldo;
+
+
+        html += `
+
+        <div class="cat-list-item">
+
+            <span>
+            ${acc.bank}
+            <br>
+            <small>
+            ${acc.name}
+            </small>
+            </span>
+
+
+            <strong>
+            ${formatRp(saldo)}
+            </strong>
+
+
+        </div>
+
+        `;
+
+    });
+
+
+
+    box.innerHTML = `
+
+    <h3>
+    💰 Kekayaan Saat Ini
+    </h3>
+
+
+    <div style="
+    font-size:24px;
+    font-weight:800;
+    margin:15px 0;
+    ">
+
+    ${formatRp(total)}
+
+    </div>
+
+
+    <hr>
+
+
+    ${html}
+
+
+    `;
+
+
+}
 
         function loadTargetAnggaran() {
             document.getElementById('input-target-anggaran').value = APP_DATA.targetAnggaran || '';
@@ -3780,6 +4846,273 @@ res.message
         `;
 
     });
+
+}
+
+        function exportLaporanPDF(){
+
+    const { jsPDF } =
+    window.jspdf;
+
+
+    const doc =
+    new jsPDF();
+
+
+
+    const month =
+    document.getElementById(
+        'l-filter-month'
+    ).value;
+
+
+
+    const data =
+    getFilteredTx(
+        "month",
+        month
+    );
+
+
+    let income = 0;
+    let expense = 0;
+
+
+    let categories = {};
+
+
+
+    data.forEach(tx=>{
+
+
+        if(tx.type==="income"){
+
+            income += Number(tx.amount);
+
+        }
+
+
+        if(tx.type==="expense"){
+
+            expense += Number(tx.amount);
+
+
+            let cat =
+            tx.category || "Lainnya";
+
+
+            categories[cat] =
+            (categories[cat] || 0)
+            + Number(tx.amount);
+
+        }
+
+    });
+
+
+
+    let y = 20;
+
+
+
+    doc.setFontSize(16);
+
+    doc.text(
+        "Laporan Keuangan",
+        20,
+        y
+    );
+
+
+    y += 10;
+
+
+    doc.setFontSize(12);
+
+
+    doc.text(
+        "Periode : " + month,
+        20,
+        y
+    );
+
+
+    y += 15;
+
+
+
+    doc.text(
+        "Pemasukan : " 
+        + formatRp(income),
+        20,
+        y
+    );
+
+
+    y += 8;
+
+
+    doc.text(
+        "Pengeluaran : "
+        + formatRp(expense),
+        20,
+        y
+    );
+
+
+    y += 8;
+
+
+    doc.text(
+        "Selisih : "
+        + formatRp(income-expense),
+        20,
+        y
+    );
+
+
+    y += 15;
+
+
+
+    doc.text(
+        "Pengeluaran Berdasarkan Kategori:",
+        20,
+        y
+    );
+
+
+    y += 8;
+
+
+
+    Object.keys(categories)
+    .forEach(cat=>{
+
+
+        doc.text(
+            cat +
+            " : " +
+            formatRp(
+                categories[cat]
+            ),
+            25,
+            y
+        );
+
+
+        y += 7;
+
+
+        // halaman baru jika penuh
+
+        if(y > 280){
+
+            doc.addPage();
+
+            y = 20;
+
+        }
+
+
+    });
+
+
+
+    y += 10;
+
+
+    doc.text(
+        "Daftar Rekening:",
+        20,
+        y
+    );
+
+
+    y += 8;
+
+
+
+    APP_DATA.accounts
+    .forEach(acc=>{
+
+
+        doc.text(
+
+            acc.bank
+            +
+            " : "
+            +
+            formatRp(
+                acc.balance
+            ),
+
+            25,
+            y
+
+        );
+
+
+        y += 7;
+
+
+    });
+
+
+
+    y += 10;
+
+
+
+    if(APP_DATA.goals){
+
+        doc.text(
+            "Target Keuangan:",
+            20,
+            y
+        );
+
+
+        y += 8;
+
+
+        APP_DATA.goals
+        .forEach(goal=>{
+
+
+            doc.text(
+
+                goal.name
+                +
+                " : "
+                +
+                formatRp(
+                    goal.current
+                )
+                +
+                " / "
+                +
+                formatRp(
+                    goal.target
+                ),
+
+                25,
+                y
+            );
+
+
+            y += 7;
+
+
+        });
+
+    }
+
+
+
+    doc.save(
+        "Laporan-"+month+".pdf"
+    );
 
 }
         
