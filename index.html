@@ -2065,8 +2065,17 @@
 
             if (res.success) {
                 document.getElementById('modalTx').style.display = 'none';
+                
+                // Ambil nilai kategori dan nominal sebelum form di-reset
+                let insertedType = document.getElementById('tx-type').value;
+                let insertedCat = document.getElementById('tx-cat').value;
+                let insertedAmount = document.getElementById('tx-amount').value;
+
                 document.getElementById('formTx').reset();
                 await initApp();
+
+                // PICU NOTIFIKASI ANGGARAN SECARA INSTAN
+                checkBudgetWarningAfterTx(insertedType, insertedCat, insertedAmount);
             } else {
                 showAlert("Error: " + res.message);
             }
