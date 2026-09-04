@@ -1798,13 +1798,6 @@
                         <div>${badgeHtml}</div>
                     </div>
                 `;
-
-                html += `
-                    <div style="background: ${bgCard}; border: 1px solid var(--border-color); border-radius: 6px; min-height: 55px; padding: 4px; display: flex; flex-direction: column; justify-content: space-between;">
-                        <span style="font-size: 11px; font-weight: 600; color: var(--text-main);">${day}</span>
-                        <div>${badgeHtml}</div>
-                    </div>
-                `;
             }
 
             html += `</div>`;
@@ -2095,7 +2088,11 @@
         function renderCategorySettings() {
             const cont = document.getElementById('list-kategori-setting');
             if(!cont) return;
-            cont.innerHTML = APP_DATA.categories.map(c => `<div class="cat-list-item"><span>${c.name}</span><span style="font-size:11px; background:#F1F5F9; padding:2px 8px; border-radius:4px;">${c.type}</span></div>`).join('');
+            cont.innerHTML = APP_DATA.categories.map(c => `
+                <div class="cat-list-item" style="color: var(--text-main);">
+                    <span style="color: var(--text-main);">${c.name}</span>
+                    <span style="font-size:11px; background:var(--border-color); color:var(--text-main); padding:2px 8px; border-radius:4px;">${c.type}</span>
+                </div>`).join('');
         }
 
         function openCategoryBudgetModal() {
@@ -2151,9 +2148,9 @@
                 let catObj = APP_DATA.categories.find(c => c.id == b.categoryId || c.name === b.categoryName);
                 let catName = catObj ? catObj.name : (b.categoryName || "Kategori");
                 return `
-                <div class="cat-list-item">
+                <div class="cat-list-item" style="color: var(--text-main);">
                     <div>
-                        <strong style="font-weight:600;">${catName}</strong><br>
+                        <strong style="font-weight:600; color: var(--text-main);">${catName}</strong><br>
                         <span style="font-size:12px; color:var(--accent); font-weight:600;">Batas: ${formatRp(b.amount)}</span>
                     </div>
                     <div>
@@ -2538,15 +2535,15 @@
             if (isDark) {
                 document.documentElement.style.setProperty('--bg-color', '#0B0F19');
                 document.documentElement.style.setProperty('--card-bg', '#1E293B');
-                document.documentElement.style.setProperty('--text-main', '#F8FAFC');
-                document.documentElement.style.setProperty('--text-muted', '#94A3B8');
+                document.documentElement.style.setProperty('--text-main', '#F8FAFC'); // Teks jadi putih/terang
+                document.documentElement.style.setProperty('--text-muted', '#94A3B8'); // Teks redup jadi abu terang
                 document.documentElement.style.setProperty('--border-color', '#334155');
                 localStorage.setItem('theme_mode', 'dark');
             } else {
                 document.documentElement.style.setProperty('--bg-color', '#F8FAFC');
                 document.documentElement.style.setProperty('--card-bg', '#FFFFFF');
-                document.documentElement.style.setProperty('--text-main', '#1E293B');
-                document.documentElement.style.setProperty('--text-muted', '#64748B');
+                document.documentElement.style.setProperty('--text-main', '#1E293B'); // Teks jadi gelap
+                document.documentElement.style.setProperty('--text-muted', '#64748B'); // Teks redup jadi abu gelap
                 document.documentElement.style.setProperty('--border-color', '#E2E8F0');
                 localStorage.setItem('theme_mode', 'light');
             }
