@@ -484,6 +484,12 @@
                 <div id="home-goal"></div>
             </div>
 
+            <!-- REKOMENDASI PENGHEMATAN SMART FINANCE -->
+            <div class="card" style="margin-top:15px; border-left: 4px solid #10B981;">
+                <h3 style="font-size:15px; margin:0 0 10px; display:flex; align-items:center; gap:8px;">💡 Rekomendasi Penghematan</h3>
+                <div id="home-saving-recommendation" style="font-size:13px; line-height:1.5; color:var(--text-main);">Memuat rekomendasi cerdas...</div>
+            </div>
+
             <!-- QUICK ACTION -->
             <h3 style="font-size:15px; margin:22px 0 10px;">Aksi Cepat</h3>
             <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px; text-align:center;">
@@ -512,6 +518,17 @@
             <!-- TRANSAKSI TERAKHIR -->
             <h3 style="font-size:15px; margin:22px 0 10px;">Transaksi Terakhir</h3>
             <div id="home-last-transaction"></div>
+        </div>
+
+        <!-- VIEW: KALENDER -->
+        <div id="view-kalender" class="view-section">
+            <div class="card">
+                <div class="flex-between" style="margin-bottom: 15px;">
+                    <h3 style="margin:0; font-size: 15px;">Kalender Transaksi</h3>
+                    <input type="month" id="kalender-filter-month" onchange="renderKalenderKeuangan()" style="width: auto; margin-bottom: 0;">
+                </div>
+                <div id="kalender-grid-container"></div>
+            </div>
         </div>
 
         <!-- VIEW: RIWAYAT -->
@@ -649,6 +666,14 @@
                 <button class="btn" onclick="syncUserData(); showAlert('Data diperbarui')">Sync Data</button>
             </div>
 
+            <!-- PENGATURAN IMPOR CSV -->
+            <div class="card" style="margin-top: 15px;">
+                <h3 style="margin-top:0; font-size:15px; font-weight:600;">Impor Data CSV</h3>
+                <p style="font-size:12px; color:var(--text-muted);">Unggah file CSV riwayat transaksi untuk dimasukkan ke database cloud.</p>
+                <input type="file" id="csv-file-input" accept=".csv" style="margin-bottom: 10px; font-size: 12px; padding: 8px;">
+                <button class="btn" style="background:#10B981;" onclick="importTransactionsCSV()">📂 Impor Transaksi CSV</button>
+            </div>
+
             <!-- PENGATURAN TAMPILAN & EKSPOR -->
             <div class="card">
                 <h3 style="margin-top:0; font-size:15px; font-weight:600;">Personalisasi & Ekspor</h3>
@@ -684,10 +709,10 @@
             <div style="flex: 1; position: relative;">
                 <button class="fab-center" onclick="openTxModal()">+</button>
             </div>
+            <div class="nav-item" onclick="switchTab('kalender', this)"><span class="nav-icon">📅</span>Kalender</div>
             <div class="nav-item" onclick="switchTab('laporan', this)"><span class="nav-icon">📄</span>Laporan</div>
             <div class="nav-item" onclick="switchTab('saya', this)"><span class="nav-icon">👤</span>Saya</div>
         </div>
-
         <!-- MODAL TRANSAKSI -->
         <div class="modal" id="modalTx">
             <div class="modal-content">
@@ -884,7 +909,8 @@
                 initApp().then(() => {
                     const savedTab = localStorage.getItem('active_tab');
                     if (savedTab && savedTab !== 'home') {
-                        const navIndexMap = { 'riwayat': 1, 'grafik': 2, 'laporan': 4, 'saya': 5 };
+                        // Perbarui indeks peta sesuai posisi baru di bottom-nav
+                        const navIndexMap = { 'riwayat': 1, 'grafik': 2, 'kalender': 3, 'laporan': 5, 'saya': 6 };
                         const navElement = document.querySelectorAll('.nav-item')[navIndexMap[savedTab]];
                         if (navElement) {
                             switchTab(savedTab, navElement);
@@ -1027,27 +1053,42 @@
         }
 
         async function initApp() {
-            const res = await callAPI({
-                action: 'getInitData',
-                userId: CURRENT_USER
-            });
+            showLoading("Menyinkronkan data dari cloud...");
+            try {
+                const res = await callAPI({
+                    action: 'getInitData',
+                    userId: CURRENT_USER
+                });
 
-            if (res.success) {
-                APP_DATA = res;
-                renderDashboard();
-                renderHomeLastTransaction();
-                document.getElementById('filter-month').value = new Date().toISOString().slice(0, 7);
-                renderSyncStatus();
-                renderGoal();
-                renderRiwayat();
-                populateCategories();
-                populateAccounts();
-                renderAccountSettings();
-                renderCategorySettings();
-                renderCategoryBudgets();
-                renderLaporan();
-                loadTargetAnggaran();
-                renderHomeBudget();
+                hideLoading();
+
+                if (res && res.success) {
+                    APP_DATA = res;
+                    renderDashboard();
+                    renderHomeLastTransaction();
+                    
+                    const filterMonthEl = document.getElementById('filter-month');
+                    if (filterMonthEl && !filterMonthEl.value) {
+                        filterMonthEl.value = new Date().toISOString().slice(0, 7);
+                    }
+                    
+                    renderSyncStatus();
+                    renderGoal();
+                    renderRiwayat();
+                    populateCategories();
+                    populateAccounts();
+                    renderAccountSettings();
+                    renderCategorySettings();
+                    renderCategoryBudgets();
+                    renderLaporan();
+                    loadTargetAnggaran();
+                    renderHomeBudget();
+                } else {
+                    showAlert("Gagal memuat data: " + (res ? res.message : "Respons server kosong."));
+                }
+            } catch (err) {
+                hideLoading();
+                showAlert("Terjadi kesalahan koneksi saat memuat data: " + err.message);
             }
         }
 
@@ -1072,6 +1113,7 @@
                 'home': 'Beranda',
                 'riwayat': 'Riwayat Transaksi',
                 'grafik': 'Grafik Analisis',
+                'kalender': 'Kalender Keuangan',
                 'laporan': 'Laporan Keuangan',
                 'saya': 'Pengaturan Akun'
             };
@@ -1081,6 +1123,9 @@
             if (tab === 'home') renderDashboard();
             if (tab === "grafik") {
                 setTimeout(() => { renderGrafik(); }, 100);
+            }
+            if (tab === 'kalender') {
+                renderKalenderKeuangan();
             }
             if (tab === 'laporan') {
                 renderLaporan();
@@ -1185,6 +1230,7 @@
             renderGoal();
             renderFinanceStatus();
             renderHomeBudget();
+            renderSmartSavingRecommendation();
         }
 
         function renderSyncStatus() {
@@ -1281,6 +1327,55 @@
             if (elLeft) elLeft.innerHTML = formatRp(sisa);
         }
 
+        // --- FITUR REKOMENDASI PENGHEMATAN OTOMATIS ---
+        function renderSmartSavingRecommendation() {
+            const box = document.getElementById("home-saving-recommendation");
+            if (!box) return;
+
+            const now = new Date();
+            const currentMonth = now.toISOString().slice(0, 7);
+            
+            let categoryExpense = {};
+            let totalExpense = 0;
+
+            // Hitung pengeluaran per kategori bulan ini
+            (APP_DATA.transactions || []).forEach(tx => {
+                if (tx.type === "expense" && tx.date.startsWith(currentMonth)) {
+                    let cat = tx.category || "Lainnya";
+                    let amount = Number(tx.amount) || 0;
+                    categoryExpense[cat] = (categoryExpense[cat] || 0) + amount;
+                    totalExpense += amount;
+                }
+            });
+
+            if (totalExpense === 0) {
+                box.innerHTML = "Belum ada data pengeluaran bulan ini untuk dianalisis. Mulai catat transaksi Anda secara rutin!";
+                return;
+            }
+
+            // Urutkan kategori dari pengeluaran terbesar
+            let sortedCats = Object.keys(categoryExpense).map(cat => ({
+                name: cat,
+                total: categoryExpense[cat]
+            })).sort((a, b) => b.total - a.total);
+
+            let topCategory = sortedCats[0];
+            let percentage = Math.round((topCategory.total / totalExpense) * 100);
+
+            let recommendationText = "";
+
+            // Berikan saran berdasarkan kondisi persentase kategori dominan
+            if (percentage > 40) {
+                recommendationText = `Pengeluaran Anda sangat terpusat pada kategori <b>${topCategory.name}</b> (${percentage}% dari total pengeluaran). Coba tetapkan batas anggaran khusus atau kurangi frekuensi pengeluaran pada kategori ini untuk mempercepat akumulasi tabungan Anda.`;
+            } else if (totalExpense > (Number(APP_DATA.targetAnggaran) || 0) && APP_DATA.targetAnggaran > 0) {
+                recommendationText = `Pengeluaran bulan ini telah melewati target anggaran yang ditetapkan. Disarankan untuk meninjau kembali transaksi non-esensial dalam beberapa hari ke depan.`;
+            } else {
+                recommendationText = `Bagus! Pengeluaran Anda sejauh ini cukup seimbang di berbagai kategori. Pertahankan kedisiplinan ini dan pastikan menyisihkan sebagian dana untuk target tabungan Anda.`;
+            }
+
+            box.innerHTML = recommendationText;
+        }
+
         function renderFinanceStatus() {
             let saldo = APP_DATA.accounts.reduce((a, b) => a + Number(b.balance || 0), 0);
             let expense = APP_DATA.transactions.filter(t => t.type === "expense").reduce((a, b) => a + Number(b.amount), 0);
@@ -1341,6 +1436,31 @@
             }
 
             return Math.min(score, 100);
+        }
+
+        // --- FITUR DETEKSI PENGELUARAN TIDAK BIASA (ANOMALY DETECTION) ---
+        function checkUnusualExpense(newCategory, newAmount) {
+            let amountsInCat = [];
+            
+            // Kumpulkan semua nominal dari kategori yang sama pada masa lalu
+            (APP_DATA.transactions || []).forEach(tx => {
+                if (tx.type === "expense" && tx.category === newCategory) {
+                    amountsInCat.push(Number(tx.amount) || 0);
+                }
+            });
+
+            // Jika belum ada cukup data historis (minimal 3 transaksi), Lewati
+            if (amountsInCat.length < 3) return;
+
+            // Hitung rata-rata pengeluaran untuk kategori tersebut
+            let totalSum = amountsInCat.reduce((acc, val) => acc + val, 0);
+            let average = totalSum / amountsInCat.length;
+
+            // Jika nominal transaksi baru melebihi 2x lipat (200%) dari rata-rata biasanya
+            if (Number(newAmount) > (average * 2) && Number(newAmount) > 100000) {
+                let diffPercent = Math.round((Number(newAmount) / average) * 100) - 100;
+                triggerBudgetAlertModal(`🚨 DETEKSI PENGELUARAN TIDAK BIASA: Transaksi "${newCategory}" senilai ${formatRp(newAmount)} ini ${diffPercent}% lebih tinggi dari rata-rata biasanya (${formatRp(Math.round(average))})!`);
+            }
         }
 
         function renderGoal() {
@@ -1496,13 +1616,23 @@
                 const acc = APP_DATA.accounts.find(a => a.id === tx.accountId);
                 const accName = acc ? acc.bank : "Dompet";
 
+                // Format khusus untuk menampilkan detail transfer rekening
+                let detailTransferText = "";
+                if (isTransfer) {
+                    const tujuanAcc = APP_DATA.accounts.find(a => a.id === tx.toAccountId);
+                    const tujuanName = tujuanAcc ? tujuanAcc.bank : "Dompet Lain";
+                    detailTransferText = `Transfer: ${accName} ➔ ${tujuanName}`;
+                } else {
+                    detailTransferText = `${tx.category} • ${accName}`;
+                }
+
                 container.innerHTML += `
                 <div class="card">
                     <div class="flex-between">
                         <div>
-                            <div style="font-weight:600;">${tx.desc || tx.category}</div>
-                            <div style="font-size:12px; color:var(--text-muted);">
-                                ${isTransfer ? `Transfer ${accName} → ${APP_DATA.accounts.find(a=>a.id===tx.toAccountId)?.bank || "-"}` : `${tx.category} • ${accName}`} • ${tx.date}
+                            <div style="font-weight:600;">${tx.desc || (isTransfer ? 'Transfer Saldo' : tx.category)}</div>
+                            <div style="font-size:12px; color:var(--text-muted); margin-top:3px;">
+                                ${detailTransferText} • ${tx.date}
                             </div>
                         </div>
                         <div class="${isInc ? 'text-green' : isTransfer ? 'text-blue' : 'text-red'}" style="font-weight:700">
@@ -1587,6 +1717,77 @@
             document.getElementById('grafik-income').innerText = formatRp(income);
             document.getElementById('grafik-expense').innerText = formatRp(expense);
             document.getElementById('grafik-net').innerText = formatRp(income - expense);
+        }
+
+        // Inisialisasi nilai bulan saat aplikasi dimuat
+        document.addEventListener('DOMContentLoaded', () => {
+            const kalMonthEl = document.getElementById('kalender-filter-month');
+            if (kalMonthEl) {
+                kalMonthEl.value = new Date().toISOString().slice(0, 7);
+            }
+        });
+
+        function renderKalenderKeuangan() {
+            const container = document.getElementById('kalender-grid-container');
+            if (!container) return;
+
+            const monthVal = document.getElementById('kalender-filter-month').value || new Date().toISOString().slice(0, 7);
+            const [year, month] = monthVal.split('-').map(Number);
+
+            const daysInMonth = new Date(year, month, 0).getDate();
+            const firstDayIndex = new Date(year, month - 1, 1).getDay();
+
+            let dailyMap = {};
+            (APP_DATA.transactions || []).forEach(tx => {
+                if (tx.date && tx.date.startsWith(monthVal)) {
+                    if (!dailyMap[tx.date]) {
+                        dailyMap[tx.date] = { income: 0, expense: 0 };
+                    }
+                    if (tx.type === 'income') dailyMap[tx.date].income += Number(tx.amount) || 0;
+                    if (tx.type === 'expense') dailyMap[tx.date].expense += Number(tx.amount) || 0;
+                }
+            });
+
+            let html = `
+                <div style="display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-weight: bold; font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">
+                    <div>Min</div><div>Sen</div><div>Sel</div><div>Rab</div><div>Kam</div><div>Jum</div><div>Sab</div>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;">
+            `;
+
+            for (let i = 0; i < firstDayIndex; i++) {
+                html += `<div style="padding: 10px; background: transparent;"></div>`;
+            }
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                let dayStr = String(day).padStart(2, '0');
+                let dateKey = `${monthVal}-${dayStr}`;
+                let dataDay = dailyMap[dateKey];
+
+                let bgCard = "#F8FAFC";
+                let badgeHtml = "";
+
+                if (dataDay) {
+                    if (dataDay.expense > 0) {
+                        bgCard = "#FEE2E2"; 
+                        badgeHtml += `<div style="font-size: 8px; color: var(--danger); font-weight: bold; line-height: 1.1;">-${formatRp(dataDay.expense)}</div>`;
+                    }
+                    if (dataDay.income > 0) {
+                        bgCard = dataDay.expense > 0 ? "#FEF3C7" : "#DCFCE7"; 
+                        badgeHtml += `<div style="font-size: 8px; color: var(--accent); font-weight: bold; line-height: 1.1;">+${formatRp(dataDay.income)}</div>`;
+                    }
+                }
+
+                html += `
+                    <div style="background: ${bgCard}; border: 1px solid var(--border-color); border-radius: 6px; min-height: 55px; padding: 4px; display: flex; flex-direction: column; justify-content: space-between;">
+                        <span style="font-size: 11px; font-weight: 600; color: var(--text-main);">${day}</span>
+                        <div>${badgeHtml}</div>
+                    </div>
+                `;
+            }
+
+            html += `</div>`;
+            container.innerHTML = html;
         }
 
         function renderTrendChart() {
@@ -2056,17 +2257,15 @@
                 category: type === 'transfer' ? 'Transfer' : document.getElementById('tx-cat').value,
                 desc: document.getElementById('tx-desc').value,
                 amount: document.getElementById('tx-amount').value,
-                date: txDate,
+                date: document.getElementById('tx-date').value, // Pastikan mengambil nilai string 'YYYY-MM-DD' murni
                 goalId: type === "expense" ? document.getElementById('tx-goal').value : ""
             });
-
             btn.innerText = 'Simpan';
             btn.disabled = false;
 
             if (res.success) {
                 document.getElementById('modalTx').style.display = 'none';
                 
-                // Ambil nilai kategori dan nominal sebelum form di-reset
                 let insertedType = document.getElementById('tx-type').value;
                 let insertedCat = document.getElementById('tx-cat').value;
                 let insertedAmount = document.getElementById('tx-amount').value;
@@ -2074,8 +2273,9 @@
                 document.getElementById('formTx').reset();
                 await initApp();
 
-                // PICU NOTIFIKASI ANGGARAN SECARA INSTAN
+                // PICU NOTIFIKASI ANGGARAN & DETEKSI ANOMALI
                 checkBudgetWarningAfterTx(insertedType, insertedCat, insertedAmount);
+                checkUnusualExpense(insertedCat, insertedAmount);
             } else {
                 showAlert("Error: " + res.message);
             }
@@ -2343,6 +2543,83 @@
             if (alertText) alertText.innerText = message;
             const modal = document.getElementById('modalBudgetAlert');
             if (modal) modal.style.display = 'flex';
+        }
+
+        // --- FITUR PREMIUM: IMPOR CSV ---
+        function importTransactionsCSV() {
+            const fileInput = document.getElementById('csv-file-input');
+            if (!fileInput.files || fileInput.files.length === 0) {
+                showAlert("Pilih file CSV terlebih dahulu.");
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            showLoading("Membaca file CSV...");
+
+            reader.onload = async function(e) {
+                try {
+                    const text = e.target.result;
+                    const lines = text.split("\n");
+                    
+                    if (lines.length < 2) {
+                        hideLoading();
+                        showAlert("Format file CSV kosong atau tidak valid.");
+                        return;
+                    }
+
+                    let importedCount = 0;
+                    
+                    // Lewati baris pertama (header)
+                    for (let i = 1; i < lines.length; i++) {
+                        let line = lines[i].trim();
+                        if (!line) continue;
+
+                        // Pecah baris CSV (mengabaikan koma di dalam tanda kutip)
+                        let cols = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+                        if (!cols || cols.length < 6) continue;
+
+                        let cleanCols = cols.map(c => c.replace(/^"|"$/g, '').trim());
+                        
+                        // Format kolom asumsi: Tanggal, Tipe, Kategori, Rekening, Nominal, Keterangan
+                        let txDate = cleanCols[1] || new Date().toISOString().split('T')[0];
+                        let txType = (cleanCols[2] || 'expense').toLowerCase();
+                        let txCat = cleanCols[3] || 'Lainnya';
+                        let txAmount = Number(cleanCols[5]) || 0;
+                        let txDesc = cleanCols[6] || cleanCols[5] || 'Impor CSV';
+
+                        // Ambil ID rekening pertama yang tersedia sebagai default jika nama rekening tidak cocok
+                        let defaultAccountId = APP_DATA.accounts.length > 0 ? APP_DATA.accounts[0].id : "";
+
+                        if (txAmount > 0 && defaultAccountId) {
+                            await callAPI({
+                                action: 'simpanTransaksi',
+                                userId: CURRENT_USER,
+                                type: txType,
+                                accountId: defaultAccountId,
+                                category: txCat,
+                                desc: txDesc,
+                                amount: txAmount,
+                                date: txDate,
+                                goalId: ""
+                            });
+                            importedCount++;
+                        }
+                    }
+
+                    hideLoading();
+                    showAlert(`Berhasil mengimpor ${importedCount} transaksi ke server!`);
+                    fileInput.value = "";
+                    await initApp();
+
+                } catch (err) {
+                    hideLoading();
+                    showAlert("Gagal memproses file CSV: " + err.message);
+                }
+            };
+
+            reader.readAsText(file);
         }
     </script>
 </body>
