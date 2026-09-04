@@ -516,7 +516,7 @@
                     <div style="background:#FEF3C7; padding:12px; border-radius:14px; font-size:22px;">🏦</div>
                     <small>Rekening</small>
                 </div>
-                <div onclick="switchTab('laporan',document.querySelectorAll('.nav-item')[3])" style="cursor:pointer;">
+                <div onclick="switchTab('laporan',document.querySelectorAll('.nav-item')[4])" style="cursor:pointer;">
                     <div style="background:#EDE9FE; padding:12px; border-radius:14px; font-size:22px;">📊</div>
                     <small>Laporan</small>
                 </div>
@@ -609,7 +609,7 @@
             <input type="month" id="l-filter-month" style="display:block;" onchange="renderMonthlyReport()">
             <input type="number" id="l-filter-year" style="display:none;" value="2026" onchange="renderLaporan()">
 
-            <div style="display: flex; background: #F1F5F9; border-radius: 10px; margin-bottom: 18px; overflow: hidden; padding: 4px; border: 1px solid var(--border-color);">
+            <div style="display: flex; background: var(--card-bg); border-radius: 10px; margin-bottom: 18px; overflow: hidden; padding: 4px; border: 1px solid var(--border-color);">
                 <div id="btn-sub-analisis" onclick="switchLaporanSub('analisis')" style="flex:1; text-align:center; padding:10px; cursor:pointer; font-weight:600; background:var(--primary); color:white; border-radius:8px; font-size: 13px;">Analisis</div>
                 <div id="btn-sub-rekening" onclick="switchLaporanSub('rekening')" style="flex:1; text-align:center; padding:10px; cursor:pointer; font-weight:500; color:var(--text-muted); font-size: 13px;">Rekening</div>
             </div>
@@ -621,22 +621,22 @@
                     <div class="flex-between" style="margin-bottom: 12px;"><strong style="font-size: 14px;">Statistik Periode</strong><span style="color:var(--text-muted);">&gt;</span></div>
                     <div class="flex-between" style="font-size: 14px; color: var(--text-muted);">
                         <div>
-                            <div id="stat-bln" style="font-size: 20px; font-weight: 700; color: var(--primary); margin-bottom: 4px;">Agu</div>
-                            <span style="font-size: 11px;">Periode Aktif</span>
+                            <div id="stat-bln" style="font-size: 20px; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">Agu</div>
+                            <span style="font-size: 11px; color: var(--text-muted);">Periode Aktif</span>
                         </div>
-                        <div style="text-align: right;"><span style="font-size: 11px;">Pengeluaran</span><div id="stat-out" class="text-red" style="font-weight: 700; font-size: 15px;">0</div></div>
-                        <div style="text-align: right;"><span style="font-size: 11px;">Pemasukan</span><div id="stat-in" class="text-green" style="font-weight: 700; font-size: 15px;">0</div></div>
-                        <div style="text-align: right;"><span style="font-size: 11px;">Saldo</span><div id="stat-net" style="font-weight: 700; font-size: 15px;">0</div></div>
+                        <div style="text-align: right;"><span style="font-size: 11px; color: var(--text-muted);">Pengeluaran</span><div id="stat-out" class="text-red" style="font-weight: 700; font-size: 15px;">0</div></div>
+                        <div style="text-align: right;"><span style="font-size: 11px; color: var(--text-muted);">Pemasukan</span><div id="stat-in" class="text-green" style="font-weight: 700; font-size: 15px;">0</div></div>
+                        <div style="text-align: right;"><span style="font-size: 11px; color: var(--text-muted);">Saldo</span><div id="stat-net" style="font-weight: 700; font-size: 15px;">0</div></div>
                     </div>
                 </div>
 
                 <div class="card">
                     <div class="flex-between" style="margin-bottom: 15px;"><strong style="font-size: 14px;">Anggaran Bulanan</strong><span style="color:var(--text-muted);">&gt;</span></div>
                     <div class="flex-between">
-                        <div id="anggaran-circle" style="width: 75px; height: 75px; border: 6px solid #F1F5F9; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--primary); font-size: 14px;">0%</div>
+                        <div id="anggaran-circle" style="width: 75px; height: 75px; border: 6px solid var(--border-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--text-main); font-size: 14px;">0%</div>
                         <div style="flex-grow: 1; margin-left: 20px;">
-                            <div class="flex-between" style="margin-bottom: 8px; font-size: 13px;"><span style="color:var(--text-muted);">Tersisa :</span><strong id="anggaran-tersisa">0</strong></div>
-                            <div class="flex-between" style="margin-bottom: 8px; font-size: 13px;"><span style="color:var(--text-muted);">Anggaran :</span><strong id="anggaran-limit">0</strong></div>
+                            <div class="flex-between" style="margin-bottom: 8px; font-size: 13px;"><span style="color:var(--text-muted);">Tersisa :</span><strong id="anggaran-tersisa" style="color: var(--text-main);">0</strong></div>
+                            <div class="flex-between" style="margin-bottom: 8px; font-size: 13px;"><span style="color:var(--text-muted);">Anggaran :</span><strong id="anggaran-limit" style="color: var(--text-main);">0</strong></div>
                             <div class="flex-between" style="font-size: 13px;"><span style="color:var(--text-muted);">Pengeluaran :</span><strong id="anggaran-out" class="text-red">0</strong></div>
                         </div>
                     </div>
@@ -724,6 +724,7 @@
             <div class="nav-item" onclick="switchTab('laporan', this)"><span class="nav-icon">📄</span>Laporan</div>
             <div class="nav-item" onclick="switchTab('saya', this)"><span class="nav-icon">👤</span>Saya</div>
         </div>
+
         <!-- MODAL TRANSAKSI -->
         <div class="modal" id="modalTx">
             <div class="modal-content">
@@ -759,7 +760,7 @@
                     <input type="number" id="tx-amount" placeholder="Nominal (Rp)" required>
                     <input type="date" id="tx-date" required>
                     <button type="submit" class="btn" id="btn-tx">Simpan</button>
-                    <button type="button" class="btn" style="background:#E2E8F0; color:var(--text-main); margin-top:8px;" onclick="document.getElementById('modalTx').style.display='none'">Batal</button>
+                    <button type="button" class="btn" style="background:var(--border-color); color:var(--text-main); margin-top:8px;" onclick="document.getElementById('modalTx').style.display='none'">Batal</button>
                 </form>
             </div>
         </div>
@@ -788,7 +789,7 @@
                     <input type="number" id="rek-bal" placeholder="Saldo Awal (Rp)" required>
                     <div id="rek-bal-note" style="font-size:12px;color:var(--text-muted);margin:-6px 0 12px 0;">Saldo awal hanya digunakan saat menambahkan rekening baru.</div>
                     <button type="submit" class="btn" id="btn-rek-save">Simpan Rekening</button>
-                    <button type="button" class="btn" style="background:#E2E8F0; color:var(--text-main); margin-top:8px;" onclick="document.getElementById('modalRek').style.display='none'">Batal</button>
+                    <button type="button" class="btn" style="background:var(--border-color); color:var(--text-main); margin-top:8px;" onclick="document.getElementById('modalRek').style.display='none'">Batal</button>
                 </form>
             </div>
         </div>
@@ -801,7 +802,7 @@
                     <select id="cat-type"><option value="expense">Pengeluaran</option><option value="income">Pemasukan</option></select>
                     <input type="text" id="cat-name" placeholder="Nama Kategori" required>
                     <button type="submit" class="btn" id="btn-cat">Simpan</button>
-                    <button type="button" class="btn" style="background:#E2E8F0; color:var(--text-main); margin-top:8px;" onclick="document.getElementById('modalCat').style.display='none'">Batal</button>
+                    <button type="button" class="btn" style="background:var(--border-color); color:var(--text-main); margin-top:8px;" onclick="document.getElementById('modalCat').style.display='none'">Batal</button>
                 </form>
             </div>
         </div>
@@ -811,7 +812,7 @@
             <div class="modal-content" style="text-align: center; max-width: 320px;">
                 <p id="custom-confirm-text" style="font-size: 15px; margin-bottom: 20px; font-weight: 500;"></p>
                 <div style="display: flex; gap: 10px;">
-                    <button type="button" class="btn" style="background: #E2E8F0; color: var(--text-main); margin-bottom: 0;" id="btn-confirm-cancel">Batal</button>
+                    <button type="button" class="btn" style="background: var(--border-color); color: var(--text-main); margin-bottom: 0;" id="btn-confirm-cancel">Batal</button>
                     <button type="button" class="btn" style="background: var(--danger); color: white; margin-bottom: 0;" id="btn-confirm-ok">Ya, Hapus</button>
                 </div>
             </div>
@@ -834,7 +835,7 @@
                 </select>
                 <input type="number" id="budget-category-amount" placeholder="Batas Anggaran">
                 <button class="btn" onclick="saveCategoryBudget()">Simpan</button>
-                <button class="btn" style="background:#E2E8F0; color:#111; margin-top:8px;" onclick="document.getElementById('modalCategoryBudget').style.display='none'">Batal</button>
+                <button class="btn" style="background:var(--border-color); color:var(--text-main); margin-top:8px;" onclick="document.getElementById('modalCategoryBudget').style.display='none'">Batal</button>
             </div>
         </div>
 
@@ -854,7 +855,7 @@
                 <input id="modal-goal-name" placeholder="Nama target">
                 <input type="number" id="modal-goal-target" placeholder="Target dana">
                 <button class="btn" onclick="saveGoal()">Simpan</button>
-                <button class="btn" style="background:#ddd;color:#111" onclick="document.getElementById('modalGoal').style.display='none'">Batal</button>
+                <button class="btn" style="background:var(--border-color); color:var(--text-main); margin-top:8px;" onclick="document.getElementById('modalGoal').style.display='none'">Batal</button>
             </div>
         </div>
 
@@ -866,7 +867,7 @@
                 <input id="edit-goal-name" placeholder="Nama target">
                 <input type="number" id="edit-goal-target" placeholder="Target dana">
                 <button class="btn" onclick="updateGoal()">Simpan</button>
-                <button class="btn" style="background:#ddd;color:#111" onclick="document.getElementById('modalEditGoal').style.display='none'">Batal</button>
+                <button class="btn" style="background:var(--border-color); color:var(--text-main); margin-top:8px;" onclick="document.getElementById('modalEditGoal').style.display='none'">Batal</button>
             </div>
         </div>
 
@@ -908,11 +909,7 @@
 
         const today = new Date();
         const currentMonthVal = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
-        document.getElementById('filter-month').value = currentMonthVal;
-        document.getElementById('g-filter-month').value = currentMonthVal;
-        document.getElementById('l-filter-month').value = currentMonthVal;
-        document.getElementById('tx-date').value = today.toISOString().split('T')[0];
-
+        
         window.onload = function() {
             const savedUser = localStorage.getItem('auth_user_id');
             if (savedUser) {
@@ -933,7 +930,6 @@
                 initApp().then(() => {
                     const savedTab = localStorage.getItem('active_tab');
                     if (savedTab && savedTab !== 'home') {
-                        // Perbarui indeks peta sesuai posisi baru di bottom-nav
                         const navIndexMap = { 'riwayat': 1, 'grafik': 2, 'kalender': 3, 'laporan': 5, 'saya': 6 };
                         const navElement = document.querySelectorAll('.nav-item')[navIndexMap[savedTab]];
                         if (navElement) {
@@ -1010,12 +1006,10 @@
             const user = document.getElementById('auth-user').value.trim();
             const pin = document.getElementById('auth-pin').value.trim();
             const nama = document.getElementById('auth-name').value.trim();
-            const btnAuth = document.getElementById('btn-auth');
 
-            // VALIDASI PIN: KELOMPOK HURUF & MINIMAL 1 ANGKA (MINIMAL 6 KARAKTER)
             if (isRegisterMode) {
-                const hasNumber = /\d/.test(pin); // Cek apakah ada minimal 1 angka
-                const hasLetter = /[a-zA-Z]/.test(pin); // Cek apakah ada huruf
+                const hasNumber = /\d/.test(pin);
+                const hasLetter = /[a-zA-Z]/.test(pin);
 
                 if (pin.length < 6) {
                     showAlert("PIN/Password minimal harus 6 karakter.");
@@ -1093,7 +1087,19 @@
                     
                     const filterMonthEl = document.getElementById('filter-month');
                     if (filterMonthEl && !filterMonthEl.value) {
-                        filterMonthEl.value = new Date().toISOString().slice(0, 7);
+                        filterMonthEl.value = currentMonthVal;
+                    }
+                    const gFilterMonthEl = document.getElementById('g-filter-month');
+                    if (gFilterMonthEl && !gFilterMonthEl.value) {
+                        gFilterMonthEl.value = currentMonthVal;
+                    }
+                    const lFilterMonthEl = document.getElementById('l-filter-month');
+                    if (lFilterMonthEl && !lFilterMonthEl.value) {
+                        lFilterMonthEl.value = currentMonthVal;
+                    }
+                    const txDateEl = document.getElementById('tx-date');
+                    if (txDateEl && !txDateEl.value) {
+                        txDateEl.value = today.toISOString().split('T')[0];
                     }
                     
                     renderSyncStatus();
@@ -1236,13 +1242,13 @@
                 else if (acc.bank.includes("Shopee")) icon = "🟧";
 
                 htmlRek += `
-                <div class="card" onclick="openAccountDetail('${acc.id}')" style="display:flex; align-items:center; gap:12px; cursor:pointer; margin-bottom:10px;">
-                    <div style="width:45px; height:45px; border-radius:14px; background:#F1F5F9; display:flex; align-items:center; justify-content:center; font-size:22px;">${icon}</div>
+                <div class="card" style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
+                    <div style="width:45px; height:45px; border-radius:14px; background:var(--border-color); display:flex; align-items:center; justify-content:center; font-size:22px;">${icon}</div>
                     <div style="flex:1">
-                        <div style="font-weight:700;">${acc.bank}</div>
+                        <div style="font-weight:700; color:var(--text-main);">${acc.bank}</div>
                         <div style="font-size:12px; color:var(--text-muted);">${acc.name}</div>
                     </div>
-                    <div style="font-weight:700;">${formatRupiah(acc.balance)}</div>
+                    <div style="font-weight:700; color:var(--text-main);">${formatRupiah(acc.balance)}</div>
                 </div>`;
             });
 
@@ -1294,7 +1300,7 @@
                 let icon = iconMap[tx.category || ""] || "💳";
                 let isIncome = tx.type === "income";
                 let isTransfer = tx.type === "transfer";
-                let warna = isTransfer ? "" : (isIncome ? "text-green" : "text-red");
+                let warna = isTransfer ? "text-blue" : (isIncome ? "text-green" : "text-red");
                 let tanda = isTransfer ? "↔" : (isIncome ? "+" : "-");
 
                 let rekening = APP_DATA.accounts.find(a => a.id == tx.accountId);
@@ -1314,7 +1320,7 @@
                 <div class="card" style="display:flex; align-items:center; gap:12px; padding:14px; margin-bottom:10px;">
                     <div style="width:42px; height:42px; border-radius:14px; background:${isTransfer? '#DBEAFE': isIncome? '#DCFCE7': '#FEE2E2'}; display:flex; align-items:center; justify-content:center; font-size:22px;">${icon}</div>
                     <div style="flex:1;">
-                        <div style="font-weight:600; font-size:14px;">${tx.desc || tx.category}</div>
+                        <div style="font-weight:600; font-size:14px; color:var(--text-main);">${tx.desc || tx.category}</div>
                         <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">${namaRek} • ${labelTanggal}</div>
                     </div>
                     <div class="${warna}" style="font-weight:700; font-size:14px;">${tanda} ${formatRp(tx.amount)}</div>
@@ -1351,7 +1357,6 @@
             if (elLeft) elLeft.innerHTML = formatRp(sisa);
         }
 
-        // --- FITUR REKOMENDASI PENGHEMATAN OTOMATIS ---
         function renderSmartSavingRecommendation() {
             const box = document.getElementById("home-saving-recommendation");
             if (!box) return;
@@ -1362,7 +1367,6 @@
             let categoryExpense = {};
             let totalExpense = 0;
 
-            // Hitung pengeluaran per kategori bulan ini
             (APP_DATA.transactions || []).forEach(tx => {
                 if (tx.type === "expense" && tx.date.startsWith(currentMonth)) {
                     let cat = tx.category || "Lainnya";
@@ -1373,11 +1377,10 @@
             });
 
             if (totalExpense === 0) {
-                box.innerHTML = "Belum ada data pengeluaran bulan ini untuk dianalisis. Mulai catat transaksi Anda secara rutin!";
+                box.innerHTML = "Belum ada data pengeluaran bulan ini untuk dianalisis.";
                 return;
             }
 
-            // Urutkan kategori dari pengeluaran terbesar
             let sortedCats = Object.keys(categoryExpense).map(cat => ({
                 name: cat,
                 total: categoryExpense[cat]
@@ -1387,14 +1390,10 @@
             let percentage = Math.round((topCategory.total / totalExpense) * 100);
 
             let recommendationText = "";
-
-            // Berikan saran berdasarkan kondisi persentase kategori dominan
             if (percentage > 40) {
-                recommendationText = `Pengeluaran Anda sangat terpusat pada kategori <b>${topCategory.name}</b> (${percentage}% dari total pengeluaran). Coba tetapkan batas anggaran khusus atau kurangi frekuensi pengeluaran pada kategori ini untuk mempercepat akumulasi tabungan Anda.`;
-            } else if (totalExpense > (Number(APP_DATA.targetAnggaran) || 0) && APP_DATA.targetAnggaran > 0) {
-                recommendationText = `Pengeluaran bulan ini telah melewati target anggaran yang ditetapkan. Disarankan untuk meninjau kembali transaksi non-esensial dalam beberapa hari ke depan.`;
+                recommendationText = `Pengeluaran Anda sangat terpusat pada kategori <b>${topCategory.name}</b> (${percentage}%). Pertimbangkan untuk menetapkan batas anggaran khusus.`;
             } else {
-                recommendationText = `Bagus! Pengeluaran Anda sejauh ini cukup seimbang di berbagai kategori. Pertahankan kedisiplinan ini dan pastikan menyisihkan sebagian dana untuk target tabungan Anda.`;
+                recommendationText = `Pengeluaran bulan ini cukup seimbang di berbagai kategori. Pertahankan kedisiplinan keuangan Anda!`;
             }
 
             box.innerHTML = recommendationText;
@@ -1462,28 +1461,22 @@
             return Math.min(score, 100);
         }
 
-        // --- FITUR DETEKSI PENGELUARAN TIDAK BIASA (ANOMALY DETECTION) ---
         function checkUnusualExpense(newCategory, newAmount) {
             let amountsInCat = [];
-            
-            // Kumpulkan semua nominal dari kategori yang sama pada masa lalu
             (APP_DATA.transactions || []).forEach(tx => {
                 if (tx.type === "expense" && tx.category === newCategory) {
                     amountsInCat.push(Number(tx.amount) || 0);
                 }
             });
 
-            // Jika belum ada cukup data historis (minimal 3 transaksi), Lewati
             if (amountsInCat.length < 3) return;
 
-            // Hitung rata-rata pengeluaran untuk kategori tersebut
             let totalSum = amountsInCat.reduce((acc, val) => acc + val, 0);
             let average = totalSum / amountsInCat.length;
 
-            // Jika nominal transaksi baru melebihi 2x lipat (200%) dari rata-rata biasanya
             if (Number(newAmount) > (average * 2) && Number(newAmount) > 100000) {
                 let diffPercent = Math.round((Number(newAmount) / average) * 100) - 100;
-                triggerBudgetAlertModal(`🚨 DETEKSI PENGELUARAN TIDAK BIASA: Transaksi "${newCategory}" senilai ${formatRp(newAmount)} ini ${diffPercent}% lebih tinggi dari rata-rata biasanya (${formatRp(Math.round(average))})!`);
+                triggerBudgetAlertModal(`🚨 PENGELUARAN TIDAK BIASA: Transaksi "${newCategory}" senilai ${formatRp(newAmount)} ini ${diffPercent}% lebih tinggi dari rata-rata biasanya!`);
             }
         }
 
@@ -1513,15 +1506,15 @@
                 html += `
                 <div class="card" style="padding:15px; margin-bottom:12px;">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <b>${goal.name}</b>
-                        <b>${persenText}%</b>
+                        <b style="color:var(--text-main);">${goal.name}</b>
+                        <b style="color:var(--text-main);">${persenText}%</b>
                     </div>
-                    <div style="margin-top:12px; font-size:13px;">${formatRupiah(goal.current)} / ${formatRupiah(goal.target)}</div>
-                    <div style="height:10px; background:#E2E8F0; border-radius:10px; margin-top:10px; overflow:hidden;">
+                    <div style="margin-top:12px; font-size:13px; color:var(--text-muted);">${formatRupiah(goal.current)} / ${formatRupiah(goal.target)}</div>
+                    <div style="height:10px; background:var(--border-color); border-radius:10px; margin-top:10px; overflow:hidden;">
                         <div style="width:${persenWidth}%; height:100%; background:#10B981;"></div>
                     </div>
                     <div style="display:flex; gap:8px; margin-top:12px;">
-                        <button onclick="openEditGoal('${goal.id}')" style="flex:1; padding:8px; border:none; border-radius:6px; background:#E2E8F0; font-weight:600; cursor:pointer;">Edit</button>
+                        <button onclick="openEditGoal('${goal.id}')" style="flex:1; padding:8px; border:none; border-radius:6px; background:var(--border-color); color:var(--text-main); font-weight:600; cursor:pointer;">Edit</button>
                         <button onclick="hapusGoal('${goal.id}')" style="flex:1; padding:8px; border:none; border-radius:6px; background:#FEE2E2; color:#991B1B; font-weight:600; cursor:pointer;">Hapus</button>
                     </div>
                 </div>`;
@@ -1613,13 +1606,12 @@
         function renderRiwayat() {
             const input = document.getElementById('filter-month');
             if (!input.value) {
-                input.value = new Date().toISOString().slice(0, 7);
+                input.value = currentMonthVal;
             }
 
             const val = input.value;
             const keyword = document.getElementById('search-riwayat') ? document.getElementById('search-riwayat').value.toLowerCase() : "";
             
-            // Ambil data berdasarkan bulan, lalu filter lagi berdasarkan kata kunci pencarian jika ada
             const data = getFilteredTx('month', val).filter(tx => {
                 const desc = (tx.desc || "").toLowerCase();
                 const cat = (tx.category || "").toLowerCase();
@@ -1640,7 +1632,6 @@
                 const acc = APP_DATA.accounts.find(a => a.id === tx.accountId);
                 const accName = acc ? acc.bank : "Dompet";
 
-                // Format khusus untuk menampilkan detail transfer rekening
                 let detailTransferText = "";
                 if (isTransfer) {
                     const tujuanAcc = APP_DATA.accounts.find(a => a.id === tx.toAccountId);
@@ -1651,23 +1642,25 @@
                 }
 
                 container.innerHTML += `
-<div class="card" style="background: var(--card-bg); border-color: var(--border-color);">
-    <div class="flex-between">
-        <div>
-            <div style="font-weight:600; color: var(--text-main);">${tx.desc || tx.category}</div>
-            <div style="font-size:12px; color: var(--text-muted);">
-                ${detailTransferText} • ${tx.date}
-            </div>
-        </div>
-        <div class="${isInc ? 'text-green' : isTransfer ? 'text-blue' : 'text-red'}" style="font-weight:700">
-            ${isInc ? '+' : isTransfer ? '↔' : '-'} ${formatRp(tx.amount)}
-        </div>
-    </div>
-    <div class="tx-actions">
-        <button class="btn-edit" onclick="openEditTxModal('${tx.id}')">Edit</button>
-        <button class="btn-del" onclick="hapusTransaksi('${tx.id}')">Hapus</button>
-    </div>
-</div>`;
+                <div class="card" style="background: var(--card-bg); border-color: var(--border-color);">
+                    <div class="flex-between">
+                        <div>
+                            <div style="font-weight:600; color: var(--text-main);">${tx.desc || tx.category}</div>
+                            <div style="font-size:12px; color: var(--text-muted);">
+                                ${detailTransferText} • ${tx.date}
+                            </div>
+                        </div>
+                        <div class="${isInc ? 'text-green' : isTransfer ? 'text-blue' : 'text-red'}" style="font-weight:700">
+                            ${isInc ? '+' : isTransfer ? '↔' : '-'} ${formatRp(tx.amount)}
+                        </div>
+                    </div>
+                    <div class="tx-actions">
+                        <button class="btn-edit" onclick="openEditTxModal('${tx.id}')">Edit</button>
+                        <button class="btn-del" onclick="hapusTransaksi('${tx.id}')">Hapus</button>
+                    </div>
+                </div>`;
+            });
+        }
 
         function setGrafikType(type) {
             activeGType = type;
@@ -1716,7 +1709,7 @@
                 },
                 options: {
                     responsive: true,
-                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } }
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 }, color: 'var(--text-main)' } } }
                 }
             });
             
@@ -1741,11 +1734,10 @@
             document.getElementById('grafik-net').innerText = formatRp(income - expense);
         }
 
-        // Inisialisasi nilai bulan saat aplikasi dimuat
         document.addEventListener('DOMContentLoaded', () => {
             const kalMonthEl = document.getElementById('kalender-filter-month');
             if (kalMonthEl) {
-                kalMonthEl.value = new Date().toISOString().slice(0, 7);
+                kalMonthEl.value = currentMonthVal;
             }
         });
 
@@ -1753,7 +1745,7 @@
             const container = document.getElementById('kalender-grid-container');
             if (!container) return;
 
-            const monthVal = document.getElementById('kalender-filter-month').value || new Date().toISOString().slice(0, 7);
+            const monthVal = document.getElementById('kalender-filter-month').value || currentMonthVal;
             const [year, month] = monthVal.split('-').map(Number);
 
             const daysInMonth = new Date(year, month, 0).getDate();
@@ -1786,7 +1778,7 @@
                 let dateKey = `${monthVal}-${dayStr}`;
                 let dataDay = dailyMap[dateKey];
 
-                let bgCard = "#F8FAFC";
+                let bgCard = "var(--card-bg)";
                 let badgeHtml = "";
 
                 if (dataDay) {
@@ -1800,9 +1792,8 @@
                     }
                 }
 
-                // Tambahkan event onclick untuk membuka detail tanggal
                 html += `
-                    <div onclick="bukaDetailKalender('${dateKey}')" style="background: ${bgCard}; border: 1px solid var(--border-color); border-radius: 6px; min-height: 55px; padding: 4px; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; transition: transform 0.1s;" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'">
+                    <div onclick="bukaDetailKalender('${dateKey}')" style="background: ${bgCard}; border: 1px solid var(--border-color); border-radius: 6px; min-height: 55px; padding: 4px; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer;">
                         <span style="font-size: 11px; font-weight: 600; color: var(--text-main);">${day}</span>
                         <div>${badgeHtml}</div>
                     </div>
@@ -1813,7 +1804,6 @@
             container.innerHTML = html;
         }
 
-        // --- FUNGSI DETAIL TRANSAKSI SAAT TANGGAL KALENDER DIKLIK ---
         function bukaDetailKalender(dateStr) {
             const modal = document.getElementById('modalKalenderDetail');
             const titleEl = document.getElementById('kalender-detail-title');
@@ -1821,7 +1811,6 @@
 
             if (!modal || !titleEl || !listEl) return;
 
-            // Format judul modal menjadi lebihreadable (contoh: 04 September 2026)
             let formattedDateTitle = new Date(dateStr).toLocaleDateString("id-ID", { 
                 day: "2-digit", 
                 month: "long", 
@@ -1829,7 +1818,6 @@
             });
             titleEl.innerText = `Transaksi: ${formattedDateTitle}`;
 
-            // Saring transaksi yang tanggalnya cocok dengan yang diklik
             const txsOnDay = (APP_DATA.transactions || []).filter(tx => tx.date === dateStr);
 
             if (txsOnDay.length === 0) {
@@ -1850,7 +1838,7 @@
                     htmlList += `
                     <div class="card" style="padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
                         <div>
-                            <div style="font-weight: 600; font-size: 14px;">${tx.desc || tx.category}</div>
+                            <div style="font-weight: 600; font-size: 14px; color: var(--text-main);">${tx.desc || tx.category}</div>
                             <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">${subInfo}</div>
                         </div>
                         <div class="${warna}" style="font-weight: 700; font-size: 14px;">
@@ -1897,8 +1885,11 @@
                 },
                 options: {
                     responsive: true,
-                    plugins: { legend: { position: 'bottom' } },
-                    scales: { y: { ticks: { callback: function(value) { return formatRp(value); } } } }
+                    plugins: { legend: { position: 'bottom', labels: { color: 'var(--text-main)' } } },
+                    scales: { 
+                        x: { ticks: { color: 'var(--text-main)' } },
+                        y: { ticks: { color: 'var(--text-main)', callback: function(value) { return formatRp(value); } } } 
+                    }
                 }
             });
         }
@@ -1927,7 +1918,7 @@
 
             const biggest = list[0];
             const persen = totalExpense > 0 ? Math.round(biggest.total / totalExpense * 100) : 0;
-            box.innerHTML = `<div>Pengeluaran terbesar: <b>${biggest.name}</b> (${formatRp(biggest.total)} / ${persen}%)</div>`;
+            box.innerHTML = `<div style="color:var(--text-main);">Pengeluaran terbesar: <b style="color:var(--text-main);">${biggest.name}</b> (${formatRp(biggest.total)} / ${persen}%)</div>`;
         }
 
         function renderMonthlyComparison() {
@@ -1947,7 +1938,7 @@
 
             let persen = previous > 0 ? Math.round(((current - previous) / previous) * 100) : 0;
             let status = current > previous ? `<span class="text-red">⚠️ Naik ${persen}%</span>` : `<span class="text-green">✅ Turun ${Math.abs(persen)}%</span>`;
-            box.innerHTML = `<div>Bulan ini: <b>${formatRp(current)}</b></div><div style="margin-top:8px;">Bulan lalu: <b>${formatRp(previous)}</b></div><div style="margin-top:12px;">${status}</div>`;
+            box.innerHTML = `<div style="color:var(--text-main);">Bulan ini: <b style="color:var(--text-main);">${formatRp(current)}</b></div><div style="margin-top:8px; color:var(--text-main);">Bulan lalu: <b style="color:var(--text-main);">${formatRp(previous)}</b></div><div style="margin-top:12px;">${status}</div>`;
         }
 
         function renderExpensePattern() {
@@ -1966,25 +1957,25 @@
             });
 
             if (count === 0) {
-                box.innerHTML = "Belum ada data pengeluaran";
+                box.innerHTML = `<span style="color:var(--text-muted);">Belum ada data pengeluaran</span>`;
                 return;
             }
 
             let topCategory = Object.keys(category).sort((a, b) => category[b] - category[a])[0];
-            box.innerHTML = `<div>🔹 Kategori dominan: <b>${topCategory}</b></div><div style="margin-top:8px;">💰 Rata-rata transaksi: <b>${formatRp(total / count)}</b></div>`;
+            box.innerHTML = `<div style="color:var(--text-main);">🔹 Kategori dominan: <b style="color:var(--text-main);">${topCategory}</b></div><div style="margin-top:8px; color:var(--text-main);">💰 Rata-rata transaksi: <b style="color:var(--text-main);">${formatRp(total / count)}</b></div>`;
         }
 
         function renderFinancialPrediction() {
             const box = document.getElementById("financial-prediction");
             if (!box) return;
             let saldo = APP_DATA.accounts.reduce((a, b) => a + Number(b.balance || 0), 0);
-            box.innerHTML = `<div>Saldo tersimpan di Server Cloud: <b>${formatRp(saldo)}</b></div>`;
+            box.innerHTML = `<div style="color:var(--text-main);">Saldo tersimpan di Server Cloud: <b style="color:var(--text-main);">${formatRp(saldo)}</b></div>`;
         }
 
         function renderFinancialScoreDetail() {
             const box = document.getElementById("financial-score-detail");
             if (!box) return;
-            box.innerHTML = `<div style="font-weight:700;">Data Cloud Publik Aktif & Aman</div>`;
+            box.innerHTML = `<div style="font-weight:700; color:var(--text-main);">Data Cloud Publik Aktif & Aman</div>`;
         }
 
         function renderLaporan() {
@@ -2034,7 +2025,7 @@
                 }
             });
 
-            box.innerHTML = `<h3>Laporan ${month}</h3><div class="cat-list-item"><span>Pemasukan</span><strong class="text-green">${formatRp(income)}</strong></div><div class="cat-list-item"><span>Pengeluaran</span><strong class="text-red">${formatRp(expense)}</strong></div>`;
+            box.innerHTML = `<h3 style="color:var(--text-main);">Laporan ${month}</h3><div class="cat-list-item"><span>Pemasukan</span><strong class="text-green">${formatRp(income)}</strong></div><div class="cat-list-item"><span>Pengeluaran</span><strong class="text-red">${formatRp(expense)}</strong></div>`;
         }
 
         function renderAssetReport() {
@@ -2044,9 +2035,9 @@
             APP_DATA.accounts.forEach(acc => {
                 let saldo = Number(acc.balance || 0);
                 total += saldo;
-                html += `<div class="cat-list-item"><span>${acc.bank} (${acc.name})</span><strong>${formatRp(saldo)}</strong></div>`;
+                html += `<div class="cat-list-item"><span>${acc.bank} (${acc.name})</span><strong style="color:var(--text-main);">${formatRp(saldo)}</strong></div>`;
             });
-            box.innerHTML = `<h3>💰 Total Aset</h3><div style="font-size:22px; font-weight:800; margin:10px 0;">${formatRp(total)}</div>${html}`;
+            box.innerHTML = `<h3 style="color:var(--text-main);">💰 Total Aset</h3><div style="font-size:22px; font-weight:800; margin:10px 0; color:var(--text-main);">${formatRp(total)}</div>${html}`;
         }
 
         function loadTargetAnggaran() {
@@ -2076,7 +2067,7 @@
             container.innerHTML = '';
             APP_DATA.accounts.forEach(acc => {
                 totalSaldo += acc.balance;
-                container.innerHTML += `<div class="card flex-between"><div><strong>${acc.bank}</strong><div style="font-size:12px; color:var(--text-muted);">${acc.name}</div></div><div style="font-weight:700;">${formatRp(acc.balance)}</div></div>`;
+                container.innerHTML += `<div class="card flex-between"><div><strong style="color:var(--text-main);">${acc.bank}</strong><div style="font-size:12px; color:var(--text-muted);">${acc.name}</div></div><div style="font-weight:700; color:var(--text-main);">${formatRp(acc.balance)}</div></div>`;
             });
             document.getElementById('rek-total-saldo').innerText = formatRp(totalSaldo);
         }
@@ -2085,16 +2076,17 @@
             const cont = document.getElementById('list-rekening-setting');
             if(!cont) return;
             cont.innerHTML = APP_DATA.accounts.map(acc => `
-    <div class="cat-list-item" style="border-color: var(--border-color);">
-        <div>
-            <strong style="color: var(--text-main);">${acc.bank}</strong> <span style="color: var(--text-muted);">(${acc.number})</span><br>
-            <span style="font-size:12px; color:var(--accent); font-weight:600;">Saldo: ${formatRp(acc.balance)}</span>
-        </div>
-        <div style="display:flex; gap:6px;">
-            <button class="btn-edit" onclick="openEditRekModal('${acc.id}')">Edit</button>
-            <button class="btn-del" onclick="hapusRekening('${acc.id}')">Hapus</button>
-        </div>
-    </div>`).join('');
+                <div class="cat-list-item" style="border-color: var(--border-color);">
+                    <div>
+                        <strong style="color: var(--text-main);">${acc.bank}</strong> <span style="color: var(--text-muted);">(${acc.number})</span><br>
+                        <span style="font-size:12px; color:var(--accent); font-weight:600;">Saldo: ${formatRp(acc.balance)}</span>
+                    </div>
+                    <div style="display:flex; gap:6px;">
+                        <button class="btn-edit" onclick="openEditRekModal('${acc.id}')">Edit</button>
+                        <button class="btn-del" onclick="hapusRekening('${acc.id}')">Hapus</button>
+                    </div>
+                </div>`).join('') || '<p style="text-align:center; color:var(--text-muted);">Belum ada rekening.</p>';
+        }
 
         function renderCategorySettings() {
             const cont = document.getElementById('list-kategori-setting');
@@ -2287,7 +2279,7 @@
             document.getElementById('tx-desc').value = tx.desc;
             document.getElementById('tx-amount').value = tx.amount;
             document.getElementById('tx-date').value = tx.date;
-            document.getElementById('tx-goal').value = tx.goal_id || "";
+            document.getElementById('tx-goal').value = tx.goalId || "";
 
             updateTxTypeUI();
             document.getElementById('modalTx').style.display = 'flex';
@@ -2337,7 +2329,7 @@
                 category: type === 'transfer' ? 'Transfer' : document.getElementById('tx-cat').value,
                 desc: document.getElementById('tx-desc').value,
                 amount: document.getElementById('tx-amount').value,
-                date: document.getElementById('tx-date').value, // Pastikan mengambil nilai string 'YYYY-MM-DD' murni
+                date: txDate,
                 goalId: type === "expense" ? document.getElementById('tx-goal').value : ""
             });
             btn.innerText = 'Simpan';
@@ -2353,7 +2345,6 @@
                 document.getElementById('formTx').reset();
                 await initApp();
 
-                // PICU NOTIFIKASI ANGGARAN & DETEKSI ANOMALI
                 checkBudgetWarningAfterTx(insertedType, insertedCat, insertedAmount);
                 checkUnusualExpense(insertedCat, insertedAmount);
             } else {
@@ -2507,7 +2498,6 @@
             doc.save("Laporan-" + month + ".pdf");
         }
 
-        // --- FITUR EKSPOR CSV ---
         function exportTransactionsCSV() {
             if (!APP_DATA.transactions || APP_DATA.transactions.length === 0) {
                 showAlert("Tidak ada data transaksi untuk diekspor.");
@@ -2540,27 +2530,25 @@
             document.body.removeChild(link);
         }
 
-        // --- FITUR TOGGLE DARK MODE / LIGHT MODE ---
         function toggleDarkMode() {
             const isDark = document.getElementById('toggle-dark-mode').checked;
             if (isDark) {
                 document.documentElement.style.setProperty('--bg-color', '#0B0F19');
                 document.documentElement.style.setProperty('--card-bg', '#1E293B');
-                document.documentElement.style.setProperty('--text-main', '#F8FAFC'); // Teks jadi putih/terang
-                document.documentElement.style.setProperty('--text-muted', '#94A3B8'); // Teks redup jadi abu terang
+                document.documentElement.style.setProperty('--text-main', '#F8FAFC');
+                document.documentElement.style.setProperty('--text-muted', '#94A3B8');
                 document.documentElement.style.setProperty('--border-color', '#334155');
                 localStorage.setItem('theme_mode', 'dark');
             } else {
                 document.documentElement.style.setProperty('--bg-color', '#F8FAFC');
                 document.documentElement.style.setProperty('--card-bg', '#FFFFFF');
-                document.documentElement.style.setProperty('--text-main', '#1E293B'); // Teks jadi gelap
-                document.documentElement.style.setProperty('--text-muted', '#64748B'); // Teks redup jadi abu gelap
+                document.documentElement.style.setProperty('--text-main', '#1E293B');
+                document.documentElement.style.setProperty('--text-muted', '#64748B');
                 document.documentElement.style.setProperty('--border-color', '#E2E8F0');
                 localStorage.setItem('theme_mode', 'light');
             }
         }
 
-        // Jalankan pengecekan tema tersimpan saat aplikasi dimuat
         window.addEventListener('DOMContentLoaded', () => {
             const savedTheme = localStorage.getItem('theme_mode');
             if (savedTheme === 'dark') {
@@ -2570,13 +2558,11 @@
             }
         });
 
-        // --- FITUR NOTIFIKASI & PERINGATAN ANGGARAN ---
         function checkBudgetWarningAfterTx(newTxType, newCategory, newAmount) {
             if (newTxType !== "expense") return;
 
             let currentMonth = new Date().toISOString().slice(0, 7);
             
-            // 1. Cek Anggaran Bulanan Secara Keseluruhan
             let targetBulanan = Number(APP_DATA.targetAnggaran) || 0;
             if (targetBulanan > 0) {
                 let totalExpenseBulanIni = 0;
@@ -2592,15 +2578,12 @@
                 if (persentaseBulanan >= 100) {
                     triggerBudgetAlertModal(`🚨 PERINGATAN: Pengeluaran bulan ini telah mencapai ${persentaseBulanan}% (Melebihi Target Anggaran Bulanan!)`);
                     return;
-                }
-                // BENAR
-                else if (persentaseBulanan >= 80) {
-                triggerBudgetAlertModal(`⚠️ PERHATIAN: Pengeluaran bulan ini sudah mencapai ${persentaseBulanan}% dari target bulanan.`);
-                return;
+                } else if (persentaseBulanan >= 80) {
+                    triggerBudgetAlertModal(`⚠️ PERHATIAN: Pengeluaran bulan ini sudah mencapai ${persentaseBulanan}% dari target bulanan.`);
+                    return;
                 }
             }
 
-            // 2. Cek Anggaran Spesifik Per Kategori
             let catBudgetObj = (APP_DATA.categoryBudgets || []).find(b => b.categoryName === newCategory || b.categoryId == newCategory);
             if (catBudgetObj) {
                 let limitKategori = Number(catBudgetObj.amount) || 0;
@@ -2625,7 +2608,6 @@
             if (modal) modal.style.display = 'flex';
         }
 
-        // --- FITUR PREMIUM: IMPOR CSV ---
         function importTransactionsCSV() {
             const fileInput = document.getElementById('csv-file-input');
             if (!fileInput.files || fileInput.files.length === 0) {
@@ -2651,25 +2633,21 @@
 
                     let importedCount = 0;
                     
-                    // Lewati baris pertama (header)
                     for (let i = 1; i < lines.length; i++) {
                         let line = lines[i].trim();
                         if (!line) continue;
 
-                        // Pecah baris CSV (mengabaikan koma di dalam tanda kutip)
                         let cols = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
                         if (!cols || cols.length < 6) continue;
 
                         let cleanCols = cols.map(c => c.replace(/^"|"$/g, '').trim());
                         
-                        // Format kolom asumsi: Tanggal, Tipe, Kategori, Rekening, Nominal, Keterangan
                         let txDate = cleanCols[1] || new Date().toISOString().split('T')[0];
                         let txType = (cleanCols[2] || 'expense').toLowerCase();
                         let txCat = cleanCols[3] || 'Lainnya';
                         let txAmount = Number(cleanCols[5]) || 0;
                         let txDesc = cleanCols[6] || cleanCols[5] || 'Impor CSV';
 
-                        // Ambil ID rekening pertama yang tersedia sebagai default jika nama rekening tidak cocok
                         let defaultAccountId = APP_DATA.accounts.length > 0 ? APP_DATA.accounts[0].id : "";
 
                         if (txAmount > 0 && defaultAccountId) {
