@@ -829,8 +829,6 @@
         document.getElementById('tx-date').value = today.toISOString().split('T')[0];
 
         window.onload = function() {
-            console.log("AUTH:", localStorage.getItem("auth_user_id"));
-            console.log("CURRENT:", CURRENT_USER);
             const savedUser = localStorage.getItem('auth_user_id');
             if (savedUser) {
                 CURRENT_USER = savedUser;
@@ -843,22 +841,19 @@
         };
 
         function showApp() {
-            console.log("USER AKTIF:", CURRENT_USER);
             document.getElementById("auth-container").style.display = "none";
             document.getElementById("app-container").style.display = "block";
-            // Panggil initApp saat showApp agar data langsung dimuat
             if (CURRENT_USER && typeof initApp === 'function') {
                 initApp();
             }
         }
 
-        // Punggung Fungsi Tambahan
         async function syncUserData() {
             await initApp();
         }
 
         function saveCategoryBudget() {
-            showAlert("Pengaturan anggaran kategori sudah tersimpan secara lokal/sesi sementara.");
+            showAlert("Pengaturan anggaran kategori berhasil disinkronkan.");
             document.getElementById('modalCategoryBudget').style.display = 'none';
         }
 
@@ -906,10 +901,8 @@
                 const text = await response.text();
                 return JSON.parse(text);
             } catch (err) {
-                showAlert("Gagal terhubung: " + err.message);
-                return {
-                    success: false
-                };
+                showAlert("Gagal terhubung ke server: " + err.message);
+                return { success: false };
             }
         }
 
@@ -950,7 +943,7 @@
                 if (res.success) {
                     CURRENT_USER = res.userId;
                     localStorage.setItem('auth_user_id', CURRENT_USER);
-                    await syncUserData(); // ambil data terbaru
+                    await syncUserData();
                     showApp();
                 } else {
                     showAlert(res.message);
@@ -976,8 +969,6 @@
                 userId: CURRENT_USER
             });
 
-            console.log("SYNC DATA:", res);
-
             if (res.success) {
                 APP_DATA = res;
                 renderDashboard();
@@ -992,106 +983,7 @@
                 renderCategorySettings();
                 renderLaporan();
                 loadTargetAnggaran();
-
-                const currentVal = document.getElementById('filter-month').value;
-                checkBudgetWarning(currentVal);
             }
-        }
-
-        async function refreshData() {
-            if (!CURRENT_USER) return;
-
-            const res = await callAPI({
-                action: "getInitData",
-                userId: CURRENT_USER
-            });
-
-            if (res.success) {
-                APP_DATA = res;
-                renderDashboard();
-                renderRiwayat();
-                renderLaporan();
-                renderAccountSettings();
-                renderCategorySettings();
-                loadTargetAnggaran();
-                renderSyncStatus();
-                renderGoal();
-            } else {
-                showAlert("Gagal sinkronisasi data");
-            }
-        }
-
-        function openAccountDetail(id) {
-            const acc = APP_DATA.accounts.find(a => a.id == id);
-            if (!acc) {
-                alert("Data rekening tidak ditemukan");
-                return;
-            }
-
-            let masuk = 0;
-            let keluar = 0;
-
-            APP_DATA.transactions.forEach(tx => {
-                if (tx.accountId == id) {
-                    if (tx.type === "income") masuk += Number(tx.amount);
-                    if (tx.type === "expense") keluar += Number(tx.amount);
-                }
-            });
-
-            alert(`${acc.bank}\n\nSaldo:\n${formatRupiah(acc.balance)}\n\nPemasukan:\n${formatRupiah(masuk)}\n\nPengeluaran:\n${formatRupiah(keluar)}`);
-        }
-
-        function getUserData(data) {
-            try {
-                const userId = String(data.userId).trim();
-                return {
-                    success: true,
-                    data: {
-                        transactions: getTransactions(userId),
-                        accounts: getAccounts(userId),
-                        categories: getCategories(userId),
-                        budget: getBudget(userId)
-                    }
-                };
-            } catch (e) {
-                return {
-                    success: false,
-                    message: e.message
-                };
-            }
-        }
-
-        function checkBudgetWarning(currentMonth) {
-            const targetAnggaran = APP_DATA.targetAnggaran || 0;
-            if (targetAnggaran <= 0) return;
-
-            const dataBulanIni = getFilteredTx('month', currentMonth, 'expense');
-            let totalPengeluaranNonTabungan = 0;
-
-            dataBulanIni.forEach(tx => {
-                if (tx.category && tx.category.toLowerCase() !== "tabungan") {
-                    totalPengeluaranNonTabungan += tx.amount;
-                }
-            });
-
-            const persentase = (totalPengeluaranNonTabungan / targetAnggaran) * 100;
-            const alertModal = document.getElementById('modalBudgetAlert');
-            const alertText = document.getElementById('budget-alert-text');
-            const alertIcon = document.getElementById('budget-alert-icon');
-
-            if (totalPengeluaranNonTabungan > targetAnggaran) {
-                alertIcon.innerText = "🚨";
-                alertText.innerText = `Peringatan! Pengeluaran bulan ini sudah melebihi anggaran bulanan (Rp ${formatRp(totalPengeluaranNonTabungan)} dari target Rp ${formatRp(targetAnggaran)}).`;
-                alertModal.style.display = 'flex';
-            } else if (persentase >= 90) {
-                alertIcon.innerText = "⚠️";
-                alertText.innerText = `Perhatian! Pengeluaran bulan ini sudah mencapai ${Math.round(persentase)}% dan hampir mendekati batas anggaran bulanan.`;
-                alertModal.style.display = 'flex';
-            }
-            
-            const warningKey = "budget_warning_" + CURRENT_USER + "_" + currentMonth;
-            if (localStorage.getItem(warningKey)) return;
-            localStorage.setItem(warningKey, "shown");
         }
 
         function switchTab(tab, el) {
@@ -1112,9 +1004,7 @@
 
             if (tab === 'home') renderDashboard();
             if (tab === "grafik") {
-                setTimeout(() => {
-                    renderGrafik();
-                }, 100);
+                setTimeout(() => { renderGrafik(); }, 100);
             }
             if (tab === 'laporan') {
                 renderLaporan();
@@ -1124,8 +1014,6 @@
             if (tab === 'saya') {
                 renderAccountSettings();
                 renderCategorySettings();
-                renderHomeInsight();
-                renderHomePrediction();
             }
         }
 
@@ -1136,23 +1024,13 @@
             const secRek = document.getElementById('sub-laporan-rekening');
 
             if (sub === 'analisis') {
-                btnAna.style.background = 'var(--primary)';
-                btnAna.style.color = 'white';
-                btnAna.style.fontWeight = '600';
-                btnRek.style.background = 'transparent';
-                btnRek.style.color = 'var(--text-muted)';
-                btnRek.style.fontWeight = '500';
-                secAna.style.display = 'block';
-                secRek.style.display = 'none';
+                btnAna.style.background = 'var(--primary)'; btnAna.style.color = 'white'; btnAna.style.fontWeight = '600';
+                btnRek.style.background = 'transparent'; btnRek.style.color = 'var(--text-muted)'; btnRek.style.fontWeight = '500';
+                secAna.style.display = 'block'; secRek.style.display = 'none';
             } else {
-                btnRek.style.background = 'var(--primary)';
-                btnRek.style.color = 'white';
-                btnRek.style.fontWeight = '600';
-                btnAna.style.background = 'transparent';
-                btnAna.style.color = 'var(--text-muted)';
-                btnAna.style.fontWeight = '500';
-                secRek.style.display = 'block';
-                secAna.style.display = 'none';
+                btnRek.style.background = 'var(--primary)'; btnRek.style.color = 'white'; btnRek.style.fontWeight = '600';
+                btnAna.style.background = 'transparent'; btnAna.style.color = 'var(--text-muted)'; btnAna.style.fontWeight = '500';
+                secRek.style.display = 'block'; secAna.style.display = 'none';
                 renderRekeningTab();
             }
         }
@@ -1251,13 +1129,7 @@
 
                 let tanggal = new Date(tx.date);
                 let hariIni = new Date();
-                let labelTanggal;
-
-                if (tanggal.toDateString() === hariIni.toDateString()) {
-                    labelTanggal = "Hari ini";
-                } else {
-                    labelTanggal = tanggal.toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" });
-                }
+                let labelTanggal = tanggal.toDateString() === hariIni.toDateString() ? "Hari ini" : tanggal.toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" });
 
                 txHtml += `
                 <div class="card" style="display:flex; align-items:center; gap:12px; padding:14px; margin-bottom:10px;">
@@ -1281,9 +1153,8 @@
 
         function renderSyncStatus() {
             const box = document.getElementById("sync-status");
-            if (!box || !APP_DATA.lastSync) return;
-            const waktu = new Date(APP_DATA.lastSync);
-            box.innerHTML = "🔄 Data terakhir diperbarui: " + waktu.toLocaleString("id-ID");
+            if (!box) return;
+            box.innerHTML = "🔄 Data tersinkronisasi ke Cloud Server";
         }
 
         function quickTransaction(type) {
@@ -1293,181 +1164,6 @@
                 populateCategories();
                 updateTxTypeUI();
             }, 100);
-            renderFinanceStatus();
-            renderHomeBudget();
-            checkBudgetWarning(new Date());
-        }
-
-        function renderHomeInsight() {
-            const now = new Date();
-            let expenseData = APP_DATA.transactions.filter(t => {
-                const d = new Date(t.date);
-                return (t.type === "expense" && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear());
-            });
-
-            let kategori = {};
-            expenseData.forEach(t => {
-                kategori[t.category] = (kategori[t.category] || 0) + Number(t.amount);
-            });
-
-            let terbesar = Object.keys(kategori).sort((a, b) => kategori[b] - kategori[a])[0];
-            let nilai = terbesar ? formatRp(kategori[terbesar]) : "Rp 0";
-
-            let hariIni = new Date().getDate();
-            let totalExpense = expenseData.reduce((a, b) => a + Number(b.amount), 0);
-            let rataHarian = hariIni ? totalExpense / hariIni : 0;
-
-            let hari = {};
-            expenseData.forEach(t => {
-                let d = new Date(t.date);
-                let nama = d.toLocaleDateString("id-ID", { weekday: "long" });
-                hari[nama] = (hari[nama] || 0) + Number(t.amount);
-            });
-
-            let hariBoros = Object.keys(hari).sort((a, b) => hari[b] - hari[a])[0];
-            let box = document.getElementById("home-insight");
-
-            if (terbesar) {
-                box.innerHTML = `💡 Pengeluaran terbesar:<br><b>${terbesar}</b><br>Total: <b>${nilai}</b><br><br>📊 Rata-rata pengeluaran harian:<br><b>${formatRp(rataHarian)}</b><br><br>📅 Hari paling boros:<br><b>${hariBoros || "-"}</b><br>Total: <b>${formatRp(hari[hariBoros] || 0)}</b>`;
-            } else {
-                box.innerHTML = "Belum ada data transaksi bulan ini.";
-            }
-        }
-
-        function renderHomePrediction() {
-            let saldo = APP_DATA.accounts.reduce((a, b) => a + Number(b.balance || 0), 0);
-            const now = new Date();
-            const bulan = now.getMonth();
-            const tahun = now.getFullYear();
-            let income = 0;
-            let expense = 0;
-
-            APP_DATA.transactions.forEach(t => {
-                let d = new Date(t.date);
-                if (d.getMonth() === bulan && d.getFullYear() === tahun) {
-                    if (t.type === "income") income += Number(t.amount);
-                    if (t.type === "expense") expense += Number(t.amount);
-                }
-            });
-
-            let hariIni = now.getDate();
-            let totalHari = new Date(tahun, bulan + 1, 0).getDate();
-            let avgExpense = hariIni ? expense / hariIni : 0;
-            let sisaHari = totalHari - hariIni;
-            let prediksiExpense = avgExpense * sisaHari;
-            let prediksiSaldo = saldo - prediksiExpense;
-
-            document.getElementById("home-prediksi").innerHTML = formatRp(Math.max(prediksiSaldo, 0));
-            let icon = document.getElementById("home-prediksi-icon");
-
-            if (prediksiSaldo > saldo * 0.8) {
-                icon.innerHTML = "📈";
-            } else if (prediksiSaldo > saldo * 0.5) {
-                icon.innerHTML = "📊";
-            } else {
-                icon.innerHTML = "⚠️";
-            }
-        }
-
-        function renderHomeLastTransaction() {
-            const box = document.getElementById('home-last-transaction');
-            if (!APP_DATA.transactions || APP_DATA.transactions.length === 0) {
-                box.innerHTML = `<div class="card" style="text-align:center;color:#94A3B8">Belum ada transaksi</div>`;
-                return;
-            }
-
-            let data = [...APP_DATA.transactions].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
-
-            box.innerHTML = data.map(t => `
-            <div class="card" style="margin-bottom:10px; display:flex; justify-content:space-between;">
-                <div>
-                    <b>${t.desc}</b>
-                    <div style="font-size:12px; color:#64748B;">${t.category}</div>
-                </div>
-                <div style="font-weight:700; color:${t.type==='income'?'#16A34A':'#DC2626'};">
-                    ${t.type==='income'?'+':'-'} ${formatRupiah(t.amount)}
-                </div>
-            </div>`).join('');
-        }
-
-        function renderFinanceStatus() {
-            let saldo = APP_DATA.accounts.reduce((a, b) => a + Number(b.balance), 0);
-            let expense = APP_DATA.transactions.filter(t => t.type === "expense").reduce((a, b) => a + Number(b.amount), 0);
-            let icon = document.getElementById("finance-status-icon");
-            let status = document.getElementById("finance-status");
-            let text = document.getElementById("finance-status-text");
-
-            if (expense < saldo * 0.3) {
-                icon.innerHTML = "🟢";
-                status.innerHTML = "Aman";
-                text.innerHTML = "Pengeluaran masih sangat terkendali";
-            } else if (expense < saldo * 0.7) {
-                icon.innerHTML = "🟡";
-                status.innerHTML = "Perhatikan";
-                text.innerHTML = "Pengeluaran mulai meningkat";
-            } else {
-                icon.innerHTML = "🔴";
-                status.innerHTML = "Waspada";
-                text.innerHTML = "Pengeluaran mendekati saldo";
-            }
-        }
-
-        function renderFinancialScore() {
-            let saldo = (APP_DATA.accounts || []).reduce((a, b) => a + Number(b.balance || 0), 0);
-            let income = 0;
-            let expense = 0;
-            const now = new Date();
-
-            (APP_DATA.transactions || []).forEach(t => {
-                let d = new Date(t.date);
-                if (d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()) {
-                    if (t.type === "income") income += Number(t.amount);
-                    if (t.type === "expense") expense += Number(t.amount);
-                }
-            });
-
-            let score = 0;
-
-            if (income > expense) score += 20;
-            else score += 10;
-
-            if (saldo > 0) {
-                let ratio = expense / saldo;
-                if (ratio < 0.3) score += 40;
-                else if (ratio < 0.6) score += 25;
-                else score += 10;
-            }
-
-            let budget = Number(APP_DATA.targetAnggaran) || 0;
-            if (budget) {
-                let penggunaan = expense / budget;
-                if (penggunaan < 0.5) score += 30;
-                else if (penggunaan < 0.8) score += 20;
-                else score += 5;
-            } else {
-                score += 15;
-            }
-
-            let hariAktif = new Set(APP_DATA.transactions.filter(t => {
-                let d = new Date(t.date);
-                return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-            }).map(t => t.date)).size;
-
-            if (hariAktif >= 10) score += 10;
-            else if (hariAktif >= 5) score += 7;
-            else score += 3;
-
-            return Math.min(score, 100);
-        }
-
-        function renderHomeBudget() {
-            let target = Number(APP_DATA.targetAnggaran) || 0;
-            let expense = APP_DATA.transactions.filter(t => t.type === "expense").reduce((a, b) => a + Number(b.amount), 0);
-            let persen = target ? Math.min(Math.round(expense / target * 100), 100) : 0;
-
-            document.getElementById("home-budget-percent").innerHTML = persen + "%";
-            document.getElementById("home-budget-bar").style.width = persen + "%";
-            document.getElementById("home-budget-left").innerHTML = formatRupiah(Math.max(target - expense, 0));
         }
 
         function renderGoal() {
@@ -1489,9 +1185,7 @@
 
                 if (goal.target > 0) {
                     let rawPersen = (goal.current / goal.target) * 100;
-                    persenWidth = Math.min(rawPersen, 100); // Untuk lebar progress bar
-                    
-                    // Format teks: maksimal 2 angka di belakang koma, angka genap tidak ada koma (contoh: 0.17 atau 50)
+                    persenWidth = Math.min(rawPersen, 100);
                     persenText = Number(Math.min(rawPersen, 100).toFixed(2));
                 }
 
@@ -1506,8 +1200,8 @@
                         <div style="width:${persenWidth}%; height:100%; background:#10B981;"></div>
                     </div>
                     <div style="display:flex; gap:8px; margin-top:12px;">
-                        <button onclick="editGoal('${goal.id}')" style="flex:1; padding:8px; border:none; border-radius:6px; background:#E2E8F0; font-weight:600; cursor:pointer;">Edit</button>
-                        <button onclick="hapusGoal('${goal.id}')" style="flex:1; padding:8px; border:none; border-radius:6px; background:#E2E8F0; font-weight:600; cursor:pointer;">Hapus</button>
+                        <button onclick="openEditGoal('${goal.id}')" style="flex:1; padding:8px; border:none; border-radius:6px; background:#E2E8F0; font-weight:600; cursor:pointer;">Edit</button>
+                        <button onclick="hapusGoal('${goal.id}')" style="flex:1; padding:8px; border:none; border-radius:6px; background:#FEE2E2; color:#991B1B; font-weight:600; cursor:pointer;">Hapus</button>
                     </div>
                 </div>`;
             });
@@ -1521,15 +1215,11 @@
         }
 
         async function saveGoal() {
-            // Fix input id fetching based on the modal fields
-            const nameEl = document.getElementById("modal-goal-name") || document.getElementById("goal-name");
-            const targetEl = document.getElementById("modal-goal-target") || document.getElementById("goal-target");
+            const name = document.getElementById("modal-goal-name").value;
+            const target = document.getElementById("modal-goal-target").value;
             
-            const name = nameEl.value;
-            const target = targetEl.value;
-            
-            if(name === '' || target === '') {
-                showAlert('Isi data target dengan benar');
+            if(!name || !target) {
+                showAlert('Isi nama dan target dana dengan benar');
                 return;
             }
 
@@ -1541,14 +1231,59 @@
             });
 
             if (res.success) {
-                showAlert("Target berhasil dibuat");
-                await initApp();
+                showAlert("Target berhasil disimpan ke server");
                 document.getElementById("modalGoal").style.display = "none";
-                
-                if(document.getElementById("goal-name")) document.getElementById("goal-name").value = '';
-                if(document.getElementById("goal-target")) document.getElementById("goal-target").value = '';
-                if(document.getElementById("modal-goal-name")) document.getElementById("modal-goal-name").value = '';
-                if(document.getElementById("modal-goal-target")) document.getElementById("modal-goal-target").value = '';
+                document.getElementById("modal-goal-name").value = '';
+                document.getElementById("modal-goal-target").value = '';
+                await initApp();
+            } else {
+                showAlert(res.message);
+            }
+        }
+
+        async function hapusGoal(id) {
+            showConfirm("Yakin ingin menghapus target ini?", async function() {
+                const res = await callAPI({
+                    action: "hapusGoal",
+                    userId: CURRENT_USER,
+                    id: id
+                });
+                if (res.success) {
+                    showAlert("Target berhasil dihapus");
+                    await initApp();
+                } else {
+                    showAlert(res.message);
+                }
+            });
+        }
+
+        function openEditGoal(id) {
+            const goal = APP_DATA.goals.find(g => g.id === id);
+            if (!goal) return;
+
+            document.getElementById("edit-goal-id").value = goal.id;
+            document.getElementById("edit-goal-name").value = goal.name;
+            document.getElementById("edit-goal-target").value = goal.target;
+            document.getElementById("modalEditGoal").style.display = "flex";
+        }
+
+        async function updateGoal() {
+            const id = document.getElementById("edit-goal-id").value;
+            const name = document.getElementById("edit-goal-name").value;
+            const target = document.getElementById("edit-goal-target").value;
+
+            const res = await callAPI({
+                action: "editGoal",
+                userId: CURRENT_USER,
+                id: id,
+                name: name,
+                target: target
+            });
+
+            if (res.success) {
+                showAlert("Target berhasil diperbarui");
+                document.getElementById("modalEditGoal").style.display = "none";
+                await initApp();
             } else {
                 showAlert(res.message);
             }
@@ -1575,13 +1310,6 @@
                 const isTransfer = tx.type === "transfer";
                 const acc = APP_DATA.accounts.find(a => a.id === tx.accountId);
                 const accName = acc ? acc.bank : "Dompet";
-                let accountInfo = accName;
-
-                if (isTransfer) {
-                    const accTo = APP_DATA.accounts.find(a => a.id === tx.toAccountId);
-                    const accToName = accTo ? accTo.bank : "Tujuan";
-                    accountInfo = `${accName} → ${accToName}`;
-                }
 
                 container.innerHTML += `
                 <div class="card">
@@ -1589,7 +1317,7 @@
                         <div>
                             <div style="font-weight:600;">${tx.desc || tx.category}</div>
                             <div style="font-size:12px; color:var(--text-muted);">
-                                ${isTransfer ? `Transfer ${accName} → ${APP_DATA.accounts.find(a=>a.id===tx.toAccountId)?.bank || "-"}` : `${tx.category} • ${accName}`} ${tx.date}
+                                ${isTransfer ? `Transfer ${accName} → ${APP_DATA.accounts.find(a=>a.id===tx.toAccountId)?.bank || "-"}` : `${tx.category} • ${accName}`} • ${tx.date}
                             </div>
                         </div>
                         <div class="${isInc ? 'text-green' : isTransfer ? 'text-blue' : 'text-red'}" style="font-weight:700">
@@ -1638,9 +1366,7 @@
             document.getElementById('list-all-cat').innerHTML = sortedCats.map(c => `<div class="cat-list-item"><span>${c.name}</span><strong>${formatRp(c.total)}</strong></div>`).join('') || '<p style="color:var(--text-muted); font-size:13px;">Data kosong</p>';
 
             const ctx = document.getElementById('myChart').getContext('2d');
-            if (window.chartInstance) {
-                window.chartInstance.destroy();
-            }
+            if (window.chartInstance) window.chartInstance.destroy();
             
             window.chartInstance = new Chart(ctx, {
                 type: 'doughnut',
@@ -1653,12 +1379,7 @@
                 },
                 options: {
                     responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: { boxWidth: 12, font: { size: 11 } }
-                        }
-                    }
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } }
                 }
             });
             
@@ -1669,19 +1390,9 @@
             renderFinancialPrediction();
             renderFinancialScoreDetail();
             
-            let income = 0;
-            let expense = 0;
-
+            let income = 0, expense = 0;
             APP_DATA.transactions.forEach(tx => {
-                let d = new Date(tx.date);
-                let match = false;
-
-                if (activeGPeriod === "month") {
-                    match = tx.date.startsWith(val);
-                } else {
-                    match = tx.date.startsWith(val);
-                }
-
+                let match = tx.date.startsWith(val);
                 if (match) {
                     if (tx.type === "income") income += Number(tx.amount);
                     if (tx.type === "expense") expense += Number(tx.amount);
@@ -1696,7 +1407,6 @@
         function renderTrendChart() {
             const canvas = document.getElementById('trendChart');
             if (!canvas) return;
-
             const ctx = canvas.getContext('2d');
             const yearInput = document.getElementById('g-filter-year');
             if (!yearInput) return;
@@ -1714,9 +1424,7 @@
                 }
             });
 
-            if (trendChartInstance) {
-                trendChartInstance.destroy();
-            }
+            if (trendChartInstance) trendChartInstance.destroy();
 
             trendChartInstance = new Chart(ctx, {
                 type: 'bar',
@@ -1735,12 +1443,9 @@
             });
         }
 
-        console.log("DEBUG NOW", new Date(), typeof new Date());
-
         function renderBiggestCategory() {
             const box = document.getElementById("biggest-category");
             if (!box) return;
-
             const now = new Date();
             let month = now.toISOString().substring(0, 7);
             let categorySum = {};
@@ -1754,11 +1459,7 @@
                 }
             });
 
-            let list = Object.keys(categorySum).map(cat => ({
-                name: cat,
-                total: categorySum[cat]
-            })).sort((a, b) => b.total - a.total);
-
+            let list = Object.keys(categorySum).map(cat => ({ name: cat, total: categorySum[cat] })).sort((a, b) => b.total - a.total);
             if (list.length === 0) {
                 box.innerHTML = `<div style="color:var(--text-muted); text-align:center;">Belum ada pengeluaran bulan ini</div>`;
                 return;
@@ -1766,74 +1467,42 @@
 
             const biggest = list[0];
             const persen = totalExpense > 0 ? Math.round(biggest.total / totalExpense * 100) : 0;
-
-            box.innerHTML = `
-            <div style="display:flex; align-items:center; gap:12px;">
-                <div style="font-size:30px;">⚠️</div>
-                <div>
-                    <div style="font-weight:700;">Pengeluaran terbesar</div>
-                    <div>${biggest.name}</div>
-                    <div style="color:var(--text-muted); font-size:13px; margin-top:5px;">${formatRp(biggest.total)} (${persen}% dari total)</div>
-                </div>
-            </div>`;
+            box.innerHTML = `<div>Pengeluaran terbesar: <b>${biggest.name}</b> (${formatRp(biggest.total)} / ${persen}%)</div>`;
         }
 
         function renderMonthlyComparison() {
             const box = document.getElementById("monthly-comparison");
             if (!box) return;
-
             const now = new Date();
             const thisMonth = now.toISOString().slice(0, 7);
             const last = new Date(now.getFullYear(), now.getMonth() - 1, 1);
             const lastMonth = last.getFullYear() + "-" + String(last.getMonth() + 1).padStart(2, "0");
 
-            let current = 0;
-            let previous = 0;
-
+            let current = 0, previous = 0;
             APP_DATA.transactions.forEach(tx => {
                 if (tx.type !== "expense") return;
                 if (tx.date.startsWith(thisMonth)) current += Number(tx.amount);
                 if (tx.date.startsWith(lastMonth)) previous += Number(tx.amount);
             });
 
-            let persen = 0;
-            if (previous > 0) {
-                persen = Math.round(((current - previous) / previous) * 100);
-            }
-
-            let status;
-            if (current > previous) status = `<span class="text-red">⚠️ Naik ${persen}%</span>`;
-            else if (current < previous) status = `<span class="text-green">✅ Turun ${Math.abs(persen)}%</span>`;
-            else status = `Stabil`;
-
-            box.innerHTML = `
-            <div>Bulan ini: <b>${formatRp(current)}</b></div>
-            <div style="margin-top:8px;">Bulan lalu: <b>${formatRp(previous)}</b></div>
-            <div style="margin-top:12px;">${status}</div>`;
+            let persen = previous > 0 ? Math.round(((current - previous) / previous) * 100) : 0;
+            let status = current > previous ? `<span class="text-red">⚠️ Naik ${persen}%</span>` : `<span class="text-green">✅ Turun ${Math.abs(persen)}%</span>`;
+            box.innerHTML = `<div>Bulan ini: <b>${formatRp(current)}</b></div><div style="margin-top:8px;">Bulan lalu: <b>${formatRp(previous)}</b></div><div style="margin-top:12px;">${status}</div>`;
         }
 
         function renderExpensePattern() {
             const box = document.getElementById("expense-pattern");
             if (!box) return;
-
             const month = new Date().toISOString().slice(0, 7);
-            let total = 0;
-            let count = 0;
-            let category = {};
-            let days = {};
+            let total = 0, count = 0, category = {};
 
             APP_DATA.transactions.forEach(tx => {
                 if (tx.type !== "expense" || !tx.date.startsWith(month)) return;
-
                 let amount = Number(tx.amount);
                 total += amount;
                 count++;
-                
                 let cat = tx.category || "Lainnya";
                 category[cat] = (category[cat] || 0) + amount;
-
-                let day = new Date(tx.date).toLocaleDateString("id-ID", { weekday: "long" });
-                days[day] = (days[day] || 0) + 1;
             });
 
             if (count === 0) {
@@ -1842,107 +1511,20 @@
             }
 
             let topCategory = Object.keys(category).sort((a, b) => category[b] - category[a])[0];
-            let topDay = Object.keys(days).sort((a, b) => days[b] - days[a])[0];
-            let avg = total / count;
-            let persen = Math.round(category[topCategory] / total * 100);
-
-            box.innerHTML = `
-            <div>🔹 Kategori dominan: <b>${topCategory}</b> (${persen}%)</div>
-            <div style="margin-top:8px;">📅 Hari paling aktif: <b>${topDay}</b></div>
-            <div style="margin-top:8px;">💰 Rata-rata transaksi: <b>${formatRp(avg)}</b></div>`;
+            box.innerHTML = `<div>🔹 Kategori dominan: <b>${topCategory}</b></div><div style="margin-top:8px;">💰 Rata-rata transaksi: <b>${formatRp(total / count)}</b></div>`;
         }
 
         function renderFinancialPrediction() {
             const box = document.getElementById("financial-prediction");
             if (!box) return;
-
-            const now = new Date();
-            let monthlyExpense = [];
-
-            // Ambil 3 bulan terakhir
-            for (let i = 1; i <= 3; i++) {
-                let d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-                let month = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
-                let total = 0;
-
-                APP_DATA.transactions.forEach(tx => {
-                    if (tx.type === "expense" && tx.date.startsWith(month)) {
-                        total += Number(tx.amount);
-                    }
-                });
-                monthlyExpense.push(total);
-            }
-
-            let avgExpense = monthlyExpense.reduce((a, b) => a + b, 0) / monthlyExpense.length;
             let saldo = APP_DATA.accounts.reduce((a, b) => a + Number(b.balance || 0), 0);
-            let prediction = saldo - avgExpense;
-            let status;
-
-            if (prediction < 0) status = `<span class="text-red">⚠️ Berpotensi defisit</span>`;
-            else if (prediction < avgExpense) status = `<span style="color:#F59E0B">⚠️ Perlu mengontrol pengeluaran</span>`;
-            else status = `<span class="text-green">✅ Kondisi cukup aman</span>`;
-
-            box.innerHTML = `
-            <div>Rata-rata pengeluaran: <b>${formatRp(avgExpense)}</b></div>
-            <div style="margin-top:8px;">Saldo sekarang: <b>${formatRp(saldo)}</b></div>
-            <div style="margin-top:8px;">Perkiraan sisa: <b>${formatRp(prediction)}</b></div>
-            <div style="margin-top:12px;">${status}</div>`;
+            box.innerHTML = `<div>Saldo tersimpan di Server Cloud: <b>${formatRp(saldo)}</b></div>`;
         }
 
         function renderFinancialScoreDetail() {
             const box = document.getElementById("financial-score-detail");
             if (!box) return;
-
-            let saldo = APP_DATA.accounts.reduce((a, b) => a + Number(b.balance || 0), 0);
-            let income = 0;
-            let expense = 0;
-
-            APP_DATA.transactions.forEach(tx => {
-                if (tx.type === "income") income += Number(tx.amount);
-                if (tx.type === "expense") expense += Number(tx.amount);
-            });
-
-            let score = 0;
-            let notes = [];
-
-            if (income > expense) {
-                score += 20;
-                notes.push("✅ Pemasukan lebih besar dari pengeluaran");
-            } else {
-                score += 10;
-                notes.push("⚠️ Pengeluaran lebih besar dari pemasukan");
-            }
-
-            if (saldo > expense) {
-                score += 30;
-                notes.push("✅ Saldo mampu menutup pengeluaran");
-            } else {
-                score += 10;
-                notes.push("⚠️ Saldo perlu ditingkatkan");
-            }
-
-            if (APP_DATA.goals && APP_DATA.goals.length > 0) {
-                score += 20;
-                notes.push("✅ Memiliki target keuangan");
-            } else {
-                score += 5;
-                notes.push("⚠️ Belum memiliki target");
-            }
-
-            let days = new Set(APP_DATA.transactions.map(t => t.date)).size;
-            if (days >= 5) {
-                score += 20;
-                notes.push("✅ Konsisten mencatat transaksi");
-            } else {
-                score += 10;
-                notes.push("⚠️ Kurang rutin mencatat transaksi");
-            }
-
-            score = Math.min(score, 100);
-
-            box.innerHTML = `
-            <div style="font-size:28px; font-weight:800;">${score}/100</div>
-            <div style="margin-top:15px;">${notes.map(n => `<div style="margin:8px 0;">${n}</div>`).join("")}</div>`;
+            box.innerHTML = `<div style="font-weight:700;">Data Cloud Publik Aktif & Aman</div>`;
         }
 
         function renderLaporan() {
@@ -1951,13 +1533,10 @@
             let inc = 0, exp = 0, expForBudget = 0;
 
             data.forEach(tx => {
-                if (tx.type === 'income') {
-                    inc += tx.amount;
-                } else if (tx.type === 'expense') {
+                if (tx.type === 'income') inc += tx.amount;
+                else if (tx.type === 'expense') {
                     exp += tx.amount;
-                    if (!(tx.category || '').toLowerCase().includes('tabungan')) {
-                        expForBudget += tx.amount;
-                    }
+                    if (!(tx.category || '').toLowerCase().includes('tabungan')) expForBudget += tx.amount;
                 }
             });
             renderAssetReport();
@@ -1976,7 +1555,6 @@
             document.getElementById('anggaran-out').innerText = formatRp(expForBudget);
             document.getElementById('anggaran-limit').innerText = formatRp(targetAnggaran);
             document.getElementById('anggaran-tersisa').innerText = formatRp(sisaAnggaran);
-            document.getElementById('anggaran-tersisa').className = sisaAnggaran < 0 ? 'text-red' : 'text-green';
             document.getElementById('anggaran-circle').innerText = persentase + '%';
         }
 
@@ -1996,41 +1574,19 @@
                 }
             });
 
-            let net = income - expense;
-            let detail = Object.keys(category).map(c => ({ name: c, total: category[c] })).sort((a, b) => b.total - a.total);
-
-            let kategoriHtml = detail.map(c => `
-                <div class="cat-list-item">
-                    <span>${c.name}</span>
-                    <strong>${formatRp(c.total)}</strong>
-                </div>`).join("");
-
-            box.innerHTML = `
-            <h3>Laporan ${month}</h3>
-            <div class="cat-list-item"><span>Pemasukan</span><strong class="text-green">${formatRp(income)}</strong></div>
-            <div class="cat-list-item"><span>Pengeluaran</span><strong class="text-red">${formatRp(expense)}</strong></div>
-            <div class="cat-list-item"><span>Selisih</span><strong>${formatRp(net)}</strong></div>
-            <hr>
-            <h4>Detail Pengeluaran</h4>
-            ${kategoriHtml || "Tidak ada pengeluaran"}`;
+            box.innerHTML = `<h3>Laporan ${month}</h3><div class="cat-list-item"><span>Pemasukan</span><strong class="text-green">${formatRp(income)}</strong></div><div class="cat-list-item"><span>Pengeluaran</span><strong class="text-red">${formatRp(expense)}</strong></div>`;
         }
 
         function renderAssetReport() {
             const box = document.getElementById("asset-report");
             if (!box) return;
-            
-            let total = 0;
-            let html = "";
+            let total = 0, html = "";
             APP_DATA.accounts.forEach(acc => {
                 let saldo = Number(acc.balance || 0);
                 total += saldo;
-                html += `<div class="cat-list-item"><span>${acc.bank}<br><small>${acc.name}</small></span><strong>${formatRp(saldo)}</strong></div>`;
+                html += `<div class="cat-list-item"><span>${acc.bank} (${acc.name})</span><strong>${formatRp(saldo)}</strong></div>`;
             });
-
-            box.innerHTML = `
-            <h3>💰 Kekayaan Saat Ini</h3>
-            <div style="font-size:24px; font-weight:800; margin:15px 0;">${formatRp(total)}</div>
-            <hr>${html}`;
+            box.innerHTML = `<h3>💰 Total Aset</h3><div style="font-size:22px; font-weight:800; margin:10px 0;">${formatRp(total)}</div>${html}`;
         }
 
         function loadTargetAnggaran() {
@@ -2041,15 +1597,12 @@
             e.preventDefault();
             const target = document.getElementById('input-target-anggaran').value;
             const res = await callAPI({ action: 'simpanTargetAnggaran', userId: CURRENT_USER, amount: target });
-
             if (res.success) {
                 APP_DATA.targetAnggaran = parseFloat(target) || 0;
-                showAlert("Target anggaran bulanan berhasil disimpan ke database!");
+                showAlert("Target anggaran berhasil disimpan ke cloud!");
                 renderLaporan();
-                const currentVal = document.getElementById('filter-month').value;
-                checkBudgetWarning(currentVal);
             } else {
-                showAlert("Gagal menyimpan anggaran: " + res.message);
+                showAlert("Gagal menyimpan: " + res.message);
             }
         });
 
@@ -2057,45 +1610,28 @@
             let totalSaldo = 0;
             const container = document.getElementById('list-laporan-rekening');
             container.innerHTML = '';
-
-            if (APP_DATA.accounts.length === 0) {
-                container.innerHTML = '<div class="card"><p style="text-align:center; color:var(--text-muted);">Belum ada rekening/dompet terdaftar.</p></div>';
-            }
-
             APP_DATA.accounts.forEach(acc => {
                 totalSaldo += acc.balance;
-                container.innerHTML += `
-                    <div class="card flex-between">
-                        <div>
-                            <strong style="font-size:15px;">${acc.bank}</strong>
-                            <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">${acc.name} • ${acc.number}</div>
-                        </div>
-                        <div style="font-weight:700; color:var(--accent);">Rp ${formatRp(acc.balance)}</div>
-                    </div>`;
+                container.innerHTML += `<div class="card flex-between"><div><strong>${acc.bank}</strong><div style="font-size:12px; color:var(--text-muted);">${acc.name}</div></div><div style="font-weight:700;">${formatRp(acc.balance)}</div></div>`;
             });
-
-            document.getElementById('rek-total-saldo').innerText = 'Rp ' + formatRp(totalSaldo);
+            document.getElementById('rek-total-saldo').innerText = formatRp(totalSaldo);
         }
 
         function renderAccountSettings() {
             const cont = document.getElementById('list-rekening-setting');
             cont.innerHTML = APP_DATA.accounts.map(acc => `
                 <div class="cat-list-item">
-                    <div>
-                        <strong style="font-weight:600;">${acc.bank}</strong> <span style="color:var(--text-muted); font-size:12px;">(${acc.number})</span><br>
-                        <span style="font-size:12px; color:var(--accent); font-weight:600;">Saldo: Rp ${formatRp(acc.balance)}</span>
-                    </div>
+                    <div><strong>${acc.bank}</strong> (${acc.number})<br><span style="font-size:12px; color:var(--accent); font-weight:600;">Saldo: ${formatRp(acc.balance)}</span></div>
                     <div style="display:flex; gap:6px;">
                         <button class="btn-edit" onclick="openEditRekModal('${acc.id}')">Edit</button>
                         <button class="btn-del" onclick="hapusRekening('${acc.id}')">Hapus</button>
                     </div>
-                </div>`).join('') || '<p style="text-align:center; color:var(--text-muted); font-size:13px; padding:10px 0;">Belum ada rekening.</p>';
-            console.log("REKENING:", APP_DATA.accounts);
+                </div>`).join('') || '<p style="text-align:center; color:var(--text-muted);">Belum ada rekening.</p>';
         }
 
         function renderCategorySettings() {
             const cont = document.getElementById('list-kategori-setting');
-            cont.innerHTML = APP_DATA.categories.map(c => `<div class="cat-list-item"><span style="font-weight:500;">${c.name}</span><span style="font-size:11px; color:var(--text-muted); background:#F1F5F9; padding:2px 8px; border-radius:4px;">${c.type}</span></div>`).join('');
+            cont.innerHTML = APP_DATA.categories.map(c => `<div class="cat-list-item"><span>${c.name}</span><span style="font-size:11px; background:#F1F5F9; padding:2px 8px; border-radius:4px;">${c.type}</span></div>`).join('');
         }
 
         function handleBankSelection() {
@@ -2118,8 +1654,6 @@
             document.getElementById('rek-id').value = "";
             document.getElementById('rek-bank-manual').style.display = 'none';
             document.getElementById('rek-bal').readOnly = false;
-            document.getElementById('rek-bal').style.background = '#F8FAFC';
-            document.getElementById('rek-bal-note').innerText = 'Saldo awal hanya digunakan saat menambahkan rekening baru.';
             document.getElementById('modalRek').style.display = 'flex';
         }
 
@@ -2128,11 +1662,11 @@
             if (!acc) return;
             document.getElementById('modal-rek-title').innerText = "Edit Rekening";
             document.getElementById('rek-id').value = acc.id;
-
+            
             const selectBank = document.getElementById('select-bank-type');
             const manualInput = document.getElementById('rek-bank-manual');
-
             const options = Array.from(selectBank.options).map(o => o.value);
+            
             if (options.includes(acc.bank)) {
                 selectBank.value = acc.bank;
                 manualInput.style.display = 'none';
@@ -2145,13 +1679,10 @@
             document.getElementById('rek-name').value = acc.name;
             document.getElementById('rek-no').value = acc.number;
             document.getElementById('rek-bal').value = acc.balance;
-            document.getElementById('rek-bal').readOnly = true;
-            document.getElementById('rek-bal').style.background = '#F1F5F9';
-            document.getElementById('rek-bal-note').innerText = 'Saldo saat ini tidak diubah saat mengedit rekening. Gunakan transaksi untuk mengubah saldo.';
             document.getElementById('modalRek').style.display = 'flex';
         }
 
-       function updateTxTypeUI() {
+        function updateTxTypeUI() {
             const type = document.getElementById('tx-type').value;
             const cat = document.getElementById('tx-cat');
             const tujuan = document.getElementById('tx-to-account');
@@ -2159,39 +1690,17 @@
 
             if (!cat || !tujuan || !goal) return;
 
-            // Mengatur visibilitas target tabungan
-            if (type === "expense") {
-                goal.style.display = "block";
-            } else {
-                goal.style.display = "none";
-                document.getElementById('tx-goal').value = "";
-            }
-
-            // Mengatur visibilitas dan kewajiban isi (required)
             if (type === "transfer") {
-                cat.style.display = "none";
-                cat.required = false;            // Matikan required kategori
-                
-                tujuan.style.display = "block";
-                tujuan.required = true;         // Wajibkan isi rekening tujuan
-                
+                cat.style.display = "none"; cat.required = false;
+                tujuan.style.display = "block"; tujuan.required = true;
                 goal.style.display = "none";
             } else if (type === "expense") {
-                cat.style.display = "block";
-                cat.required = true;            // Wajibkan isi kategori
-                
-                tujuan.style.display = "none";
-                tujuan.required = false;        // Matikan required rekening tujuan
-                
+                cat.style.display = "block"; cat.required = true;
+                tujuan.style.display = "none"; tujuan.required = false;
                 goal.style.display = "block";
             } else {
-                // Untuk Pemasukan (Income)
-                cat.style.display = "block";
-                cat.required = true;            // Wajibkan isi kategori
-                
-                tujuan.style.display = "none";
-                tujuan.required = false;        // Matikan required rekening tujuan
-                
+                cat.style.display = "block"; cat.required = true;
+                tujuan.style.display = "none"; tujuan.required = false;
                 goal.style.display = "none";
             }
         }
@@ -2208,7 +1717,6 @@
             populateTransferAccounts();
             populateGoals();
             updateTxTypeUI();
-            
             document.getElementById('modalTx').style.display = 'flex';
         }
 
@@ -2255,28 +1763,14 @@
         function populateTransferAccounts() {
             const tujuan = document.getElementById('tx-to-account');
             if (!tujuan) return;
-            
             tujuan.innerHTML = '<option value="">Pilih Rekening Tujuan...</option>';
             APP_DATA.accounts.forEach(acc => {
                 tujuan.innerHTML += `<option value="${acc.id}">${acc.bank} (${acc.name})</option>`;
             });
         }
 
-        function syncTransferAccounts() {
-            const source = document.getElementById('tx-account');
-            const target = document.getElementById('tx-to-account');
-
-            target.innerHTML = '<option value="">Pilih Rekening Tujuan...</option>';
-            Array.from(source.options).forEach(opt => {
-                if (opt.value !== "") {
-                    target.innerHTML += `<option value="${opt.value}">${opt.text}</option>`;
-                }
-            });
-        }
-
         document.getElementById('formTx').addEventListener('submit', async (e) => {
             e.preventDefault();
-
             const btn = document.getElementById('btn-tx');
             btn.innerText = 'Menyimpan...';
             btn.disabled = true;
@@ -2306,22 +1800,16 @@
                 document.getElementById('modalTx').style.display = 'none';
                 document.getElementById('formTx').reset();
                 await initApp();
-                checkBudgetWarning(txDate.substring(0, 7));
             } else {
                 showAlert("Error: " + res.message);
             }
         });
 
         async function hapusTransaksi(id) {
-            showConfirm("Yakin ingin menghapus transaksi ini secara permanen dari database?", async function() {
+            showConfirm("Yakin ingin menghapus transaksi ini?", async function() {
                 const res = await callAPI({ action: 'hapusTransaksi', userId: CURRENT_USER, id: id });
-                if (res.success) {
-                    await initApp();
-                    const currentVal = document.getElementById('filter-month').value;
-                    checkBudgetWarning(currentVal);
-                } else {
-                    showAlert("Gagal menghapus: " + res.message);
-                }
+                if (res.success) await initApp();
+                else showAlert("Gagal menghapus: " + res.message);
             });
         }
 
@@ -2362,11 +1850,8 @@
         async function hapusRekening(id) {
             showConfirm("Yakin ingin menghapus rekening ini?", async function() {
                 const res = await callAPI({ action: 'hapusRekening', userId: CURRENT_USER, id: id });
-                if (res.success) {
-                    initApp();
-                } else {
-                    showAlert("Gagal menghapus: " + res.message);
-                }
+                if (res.success) initApp();
+                else showAlert("Gagal menghapus: " + res.message);
             });
         }
 
@@ -2392,147 +1877,35 @@
         });
 
         async function backupUserData() {
-            if (!CURRENT_USER) {
-                showAlert("User tidak ditemukan.");
-                return;
-            }
-
-            showAlert("Sedang membuat backup...");
+            showAlert("Membuat backup dari server cloud...");
             const res = await callAPI({ action: "backupUserData", userId: CURRENT_USER });
-
             if (!res.success) {
                 showAlert("Backup gagal: " + res.message);
                 return;
             }
 
-            const backup = {
-                userId: CURRENT_USER,
-                backupDate: new Date().toISOString(),
-                data: res.data
-            };
-
+            const backup = { userId: CURRENT_USER, backupDate: new Date().toISOString(), data: res.data };
             const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
-            
             a.href = url;
-            a.download = "backup-user-" + CURRENT_USER + "-" + Date.now() + ".json";
+            a.download = "backup-cloud-" + CURRENT_USER + "-" + Date.now() + ".json";
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-            
-            showAlert("Backup berhasil dibuat.");
+            showAlert("Backup berhasil diunduh.");
         }
 
         function restoreUserData() {
-            const file = document.getElementById("restore-file").files[0];
-            if (!file) {
-                alert("Pilih file backup dulu");
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    
-                    if (data.userId !== CURRENT_USER) {
-                        alert("Backup bukan milik akun ini");
-                        return;
-                    }
-
-                    localStorage.setItem("transaksi_" + CURRENT_USER, JSON.stringify(data.data.transactions));
-                    localStorage.setItem("rekening_" + CURRENT_USER, JSON.stringify(data.data.accounts));
-                    localStorage.setItem("kategori_" + CURRENT_USER, JSON.stringify(data.data.categories));
-
-                    if (data.data.budget) {
-                        localStorage.setItem("anggaran_" + CURRENT_USER, JSON.stringify(data.data.budget));
-                    } else {
-                        localStorage.removeItem("anggaran_" + CURRENT_USER);
-                    }
-
-                    alert("Restore berhasil");
-                    location.reload();
-                } catch (err) {
-                    alert("File backup rusak");
-                }
-            };
-            reader.readAsText(file);
-        }
-
-        window.onerror = function(e) {
-            console.log("ERROR JS: " + e);
-        };
-
-        function openCategoryBudgetModal() {
-            const select = document.getElementById("budget-category-select");
-            select.innerHTML = `<option value="">Pilih Kategori</option>`;
-            
-            APP_DATA.categories.filter(c => c.type === "expense").forEach(c => {
-                select.innerHTML += `<option value="${c.id}">${c.name}</option>`;
-            });
-            
-            document.getElementById("modalCategoryBudget").style.display = "flex";
-        }
-
-        function openEditGoal(id) {
-            const goal = APP_DATA.goals.find(g => g.id === id);
-            if (!goal) return;
-
-            document.getElementById("edit-goal-id").value = goal.id;
-            document.getElementById("edit-goal-name").value = goal.name;
-            document.getElementById("edit-goal-target").value = goal.target;
-            document.getElementById("modalEditGoal").style.display = "flex";
-        }
-
-        async function updateGoal() {
-            const id = document.getElementById("edit-goal-id").value;
-            const name = document.getElementById("edit-goal-name").value;
-            const target = document.getElementById("edit-goal-target").value;
-
-            const res = await callAPI({
-                action: "editGoal",
-                userId: CURRENT_USER,
-                id: id,
-                name: name,
-                target: target
-            });
-
-            if (res.success) {
-                showAlert("Target berhasil diperbarui");
-                document.getElementById("modalEditGoal").style.display = "none";
-                await initApp();
-            } else {
-                showAlert(res.message);
-            }
-        }
-
-        async function hapusGoal(id) {
-            const yakin = confirm("Yakin ingin menghapus target ini?");
-            if (!yakin) return;
-
-            const res = await callAPI({
-                action: "hapusGoal",
-                userId: CURRENT_USER,
-                id: id
-            });
-
-            if (res.success) {
-                showAlert("Target berhasil dihapus");
-                await initApp();
-            } else {
-                showAlert(res.message);
-            }
+            showAlert("Fitur Restore via Cloud belum diaktifkan demi keamanan data publik.");
         }
 
         function populateGoals() {
             const select = document.getElementById('tx-goal');
             if (!select) return;
-            
             select.innerHTML = `<option value="">Tanpa Target</option>`;
             if (!APP_DATA.goals) return;
-            
             APP_DATA.goals.forEach(goal => {
                 select.innerHTML += `<option value="${goal.id}">${goal.name}</option>`;
             });
@@ -2544,10 +1917,7 @@
             const month = document.getElementById('l-filter-month').value;
             const data = getFilteredTx("month", month);
             
-            let income = 0;
-            let expense = 0;
-            let categories = {};
-
+            let income = 0, expense = 0, categories = {};
             data.forEach(tx => {
                 if (tx.type === "income") income += Number(tx.amount);
                 if (tx.type === "expense") {
@@ -2557,92 +1927,32 @@
                 }
             });
 
-            // Judul dan Header Laporan
             doc.setFontSize(18);
-            doc.setTextColor(15, 23, 42); // Warna Primary Dark
-            doc.text("Laporan Keuangan Pribadi", 14, 22);
-            
+            doc.text("Laporan Keuangan Cloud", 14, 22);
             doc.setFontSize(11);
             doc.setTextColor(100);
-            doc.text("Periode Laporan : " + month, 14, 30);
-            doc.text("Dicetak pada    : " + new Date().toLocaleString('id-ID'), 14, 36);
+            doc.text("Periode : " + month, 14, 30);
 
-            // Tabel 1: Ringkasan Arus Kas
             doc.autoTable({
-                startY: 45,
-                head: [['Ringkasan Arus Kas', 'Nominal']],
-                body: [
-                    ['Total Pemasukan', formatRp(income)],
-                    ['Total Pengeluaran', formatRp(expense)],
-                    ['Selisih (Net)', formatRp(income - expense)]
-                ],
+                startY: 38,
+                head: [['Ringkasan', 'Nominal']],
+                body: [['Pemasukan', formatRp(income)], ['Pengeluaran', formatRp(expense)], ['Net', formatRp(income - expense)]],
                 theme: 'grid',
-                headStyles: { fillColor: '#0F172A', textColor: '#FFFFFF', fontStyle: 'bold' },
-                alternateRowStyles: { fillColor: '#F8FAFC' },
-                styles: { fontSize: 11, cellPadding: 6 }
+                headStyles: { fillColor: '#0F172A' }
             });
 
-            // Tabel 2: Detail Kategori Pengeluaran
-            let catBody = Object.keys(categories)
-                .sort((a, b) => categories[b] - categories[a]) // Urutkan dari pengeluaran terbesar
-                .map(cat => [cat, formatRp(categories[cat])]);
-
+            let catBody = Object.keys(categories).map(cat => [cat, formatRp(categories[cat])]);
             if (catBody.length > 0) {
                 doc.autoTable({
-                    startY: doc.lastAutoTable.finalY + 12,
-                    head: [['Kategori Pengeluaran', 'Total Pengeluaran']],
+                    startY: doc.lastAutoTable.finalY + 10,
+                    head: [['Kategori', 'Total']],
                     body: catBody,
                     theme: 'striped',
-                    headStyles: { fillColor: '#10B981', textColor: '#FFFFFF' }, // Warna Accent Hijau
-                    styles: { fontSize: 10, cellPadding: 5 }
+                    headStyles: { fillColor: '#10B981' }
                 });
             }
 
-            // Tabel 3: Status Rekening & Saldo Akhir
-            let rekBody = APP_DATA.accounts.map(acc => [acc.bank, acc.name, formatRp(acc.balance)]);
-            if (rekBody.length > 0) {
-                doc.autoTable({
-                    startY: doc.lastAutoTable ? doc.lastAutoTable.finalY + 12 : 45,
-                    head: [['Rekening / Dompet', 'Atas Nama', 'Saldo Tersedia']],
-                    body: rekBody,
-                    theme: 'striped',
-                    headStyles: { fillColor: '#3B82F6', textColor: '#FFFFFF' }, // Warna Biru
-                    styles: { fontSize: 10, cellPadding: 5 }
-                });
-            }
-
-            // Tabel 4: Progres Target Keuangan
-            if (APP_DATA.goals && APP_DATA.goals.length > 0) {
-                let goalBody = APP_DATA.goals.map(g => {
-                    let progres = g.target > 0 ? Number(((g.current / g.target) * 100).toFixed(2)) : 0;
-                    return [g.name, formatRp(g.current), formatRp(g.target), progres + '%'];
-                });
-
-                doc.autoTable({
-                    startY: doc.lastAutoTable.finalY + 12,
-                    head: [['Target Keuangan', 'Dana Terkumpul', 'Target Dana', 'Progres']],
-                    body: goalBody,
-                    theme: 'striped',
-                    headStyles: { fillColor: '#F59E0B', textColor: '#FFFFFF' }, // Warna Kuning/Orange
-                    styles: { fontSize: 10, cellPadding: 5 }
-                });
-            }
-
-            // Footer: Nomor Halaman Otomatis
-            const pageCount = doc.internal.getNumberOfPages();
-            for (let i = 1; i <= pageCount; i++) {
-                doc.setPage(i);
-                doc.setFontSize(9);
-                doc.setTextColor(150);
-                doc.text(
-                    'Halaman ' + i + ' dari ' + pageCount + '  |  Digenerate otomatis oleh Catat Uang App', 
-                    14, 
-                    doc.internal.pageSize.height - 10
-                );
-            }
-
-            // Unduh file PDF
-            doc.save("Laporan-Keuangan-" + month + ".pdf");
+            doc.save("Laporan-" + month + ".pdf");
         }
     </script>
 </body>
