@@ -11,7 +11,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.7.1/jspdf.plugin.autotable.min.js"></script>
-    <style>
+   <style>
         :root {
             --primary: #0F172A;
             --accent: #10B981;
@@ -23,14 +23,13 @@
             --border-color: #E2E8F0;
         }
 
-        
-
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
             background: var(--bg-color);
             color: var(--text-main);
             -webkit-font-smoothing: antialiased;
+            transition: background 0.3s ease, color 0.3s ease;
         }
 
         #auth-container {
@@ -55,7 +54,7 @@
 
         .auth-card h2 {
             margin-top: 0;
-            color: var(--primary);
+            color: var(--text-main);
             font-size: 24px;
             font-weight: 700;
         }
@@ -109,6 +108,7 @@
             font-size: 15px;
             font-weight: 600;
         }
+
         .spinner {
             width: 40px;
             height: 40px;
@@ -118,6 +118,7 @@
             animation: spin 0.8s linear infinite;
             margin-bottom: 12px;
         }
+
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
@@ -135,11 +136,13 @@
 
         .card {
             background: var(--card-bg);
+            color: var(--text-main);
             padding: 18px;
             margin-bottom: 14px;
             border-radius: 14px;
             border: 1px solid var(--border-color);
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.01);
+            transition: background 0.3s ease, border 0.3s ease, color 0.3s ease;
         }
 
         .flex-between {
@@ -162,7 +165,7 @@
 
         .sub-nav {
             display: flex;
-            background: #F1F5F9;
+            background: var(--card-bg);
             border-radius: 10px;
             margin-bottom: 18px;
             overflow: hidden;
@@ -183,12 +186,13 @@
         }
 
         .sub-nav div.active {
-            background: var(--card-bg);
-            color: var(--primary);
+            background: var(--primary);
+            color: #ffffff;
             font-weight: 600;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
 
+        /* PERBAIKAN UTAMA: INPUT & SELECT SUPAYA KONTRAS DI MODE GELAP */
         input,
         select {
             width: 100%;
@@ -198,16 +202,20 @@
             border-radius: 10px;
             box-sizing: border-box;
             font-size: 14px;
-            background: #F8FAFC;
-            color: var(--text-main);
+            background: var(--card-bg) !important;
+            color: var(--text-main) !important;
             outline: none;
-            transition: border-color 0.2s;
+            transition: border-color 0.2s, background 0.3s, color 0.3s;
         }
 
         input:focus,
         select:focus {
-            border-color: var(--primary);
-            background: #fff;
+            border-color: var(--accent);
+        }
+
+        input::placeholder,
+        select::placeholder {
+            color: var(--text-muted) !important;
         }
 
         .btn {
@@ -248,6 +256,7 @@
             border-top: 1px solid var(--border-color);
             z-index: 100;
             height: 65px;
+            transition: background 0.3s, border 0.3s;
         }
 
         .nav-item {
@@ -261,7 +270,7 @@
         }
 
         .nav-item.active {
-            color: var(--primary);
+            color: var(--accent);
             font-weight: 700;
         }
 
@@ -310,6 +319,7 @@
 
         .modal-content {
             background: var(--card-bg);
+            color: var(--text-main);
             padding: 24px;
             border-radius: 16px;
             width: 100%;
@@ -326,6 +336,7 @@
             border-bottom: 1px solid var(--border-color);
             align-items: center;
             font-size: 14px;
+            color: var(--text-main);
         }
 
         .cat-list-item:last-child {
@@ -374,7 +385,7 @@
             display: block;
             margin-top: 5px;
             font-size: 13px;
-            color: var(--primary);
+            color: var(--text-main);
         }
     </style>
 </head>
@@ -1640,25 +1651,23 @@
                 }
 
                 container.innerHTML += `
-                <div class="card">
-                    <div class="flex-between">
-                        <div>
-                            <div style="font-weight:600;">${tx.desc || (isTransfer ? 'Transfer Saldo' : tx.category)}</div>
-                            <div style="font-size:12px; color:var(--text-muted); margin-top:3px;">
-                                ${detailTransferText} • ${tx.date}
-                            </div>
-                        </div>
-                        <div class="${isInc ? 'text-green' : isTransfer ? 'text-blue' : 'text-red'}" style="font-weight:700">
-                            ${isInc ? '+' : isTransfer ? '↔' : '-'} ${formatRp(tx.amount)}
-                        </div>
-                    </div>
-                    <div class="tx-actions">
-                        <button class="btn-edit" onclick="openEditTxModal('${tx.id}')">Edit</button>
-                        <button class="btn-del" onclick="hapusTransaksi('${tx.id}')">Hapus</button>
-                    </div>
-                </div>`;
-            });
-        }
+<div class="card" style="background: var(--card-bg); border-color: var(--border-color);">
+    <div class="flex-between">
+        <div>
+            <div style="font-weight:600; color: var(--text-main);">${tx.desc || tx.category}</div>
+            <div style="font-size:12px; color: var(--text-muted);">
+                ${detailTransferText} • ${tx.date}
+            </div>
+        </div>
+        <div class="${isInc ? 'text-green' : isTransfer ? 'text-blue' : 'text-red'}" style="font-weight:700">
+            ${isInc ? '+' : isTransfer ? '↔' : '-'} ${formatRp(tx.amount)}
+        </div>
+    </div>
+    <div class="tx-actions">
+        <button class="btn-edit" onclick="openEditTxModal('${tx.id}')">Edit</button>
+        <button class="btn-del" onclick="hapusTransaksi('${tx.id}')">Hapus</button>
+    </div>
+</div>`;
 
         function setGrafikType(type) {
             activeGType = type;
@@ -2076,14 +2085,16 @@
             const cont = document.getElementById('list-rekening-setting');
             if(!cont) return;
             cont.innerHTML = APP_DATA.accounts.map(acc => `
-                <div class="cat-list-item">
-                    <div><strong>${acc.bank}</strong> (${acc.number})<br><span style="font-size:12px; color:var(--accent); font-weight:600;">Saldo: ${formatRp(acc.balance)}</span></div>
-                    <div style="display:flex; gap:6px;">
-                        <button class="btn-edit" onclick="openEditRekModal('${acc.id}')">Edit</button>
-                        <button class="btn-del" onclick="hapusRekening('${acc.id}')">Hapus</button>
-                    </div>
-                </div>`).join('') || '<p style="text-align:center; color:var(--text-muted);">Belum ada rekening.</p>';
-        }
+    <div class="cat-list-item" style="border-color: var(--border-color);">
+        <div>
+            <strong style="color: var(--text-main);">${acc.bank}</strong> <span style="color: var(--text-muted);">(${acc.number})</span><br>
+            <span style="font-size:12px; color:var(--accent); font-weight:600;">Saldo: ${formatRp(acc.balance)}</span>
+        </div>
+        <div style="display:flex; gap:6px;">
+            <button class="btn-edit" onclick="openEditRekModal('${acc.id}')">Edit</button>
+            <button class="btn-del" onclick="hapusRekening('${acc.id}')">Hapus</button>
+        </div>
+    </div>`).join('');
 
         function renderCategorySettings() {
             const cont = document.getElementById('list-kategori-setting');
