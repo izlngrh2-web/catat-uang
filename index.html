@@ -23,6 +23,8 @@
             --border-color: #E2E8F0;
         }
 
+        
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
@@ -88,6 +90,36 @@
             font-size: 17px;
             font-weight: 600;
             color: var(--text-main);
+        }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(3px);
+            z-index: 999;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            flex-direction: column;
+            font-size: 15px;
+            font-weight: 600;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 12px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
         .view-section {
@@ -348,6 +380,12 @@
 </head>
 <body>
 
+    <!-- GLOBAL LOADING SPINNER -->
+    <div id="global-loading" class="loading-overlay">
+        <div class="spinner"></div>
+        <div id="loading-text">Memproses data ke server...</div>
+    </div>
+
     <!-- AUTHENTICATION -->
     <div id="auth-container">
         <div class="auth-card">
@@ -356,7 +394,7 @@
             <form id="formAuth">
                 <input type="text" id="auth-name" placeholder="Nama Lengkap" style="display:none;">
                 <input type="text" id="auth-user" placeholder="Username" required>
-                <input type="password" id="auth-pin" placeholder="PIN / Password" required>
+                <input type="password" id="auth-pin" placeholder="PIN (Min. 6 karakter, huruf & angka)" required>>
                 <button type="submit" class="btn" id="btn-auth">Masuk</button>
             </form>
             <span class="toggle-auth" onclick="toggleAuthMode()" id="auth-toggle-text">Belum punya akun? Daftar di sini</span>
@@ -478,7 +516,10 @@
 
         <!-- VIEW: RIWAYAT -->
         <div id="view-riwayat" class="view-section">
-            <input type="month" id="filter-month" onchange="renderRiwayat()">
+            <div style="display:flex; gap:10px; margin-bottom:14px;">
+                <input type="month" id="filter-month" onchange="renderRiwayat()" style="margin-bottom:0;">
+                <input type="text" id="search-riwayat" placeholder="Cari keterangan/kategori..." oninput="renderRiwayat()" style="margin-bottom:0;">
+            </div>
             <div id="list-riwayat"></div>
         </div>
 
@@ -606,6 +647,16 @@
                 <p style="font-size:12px;color:var(--text-muted)">Unduh cadangan data dari server database.</p>
                 <button class="btn" style="margin-bottom: 10px;" onclick="backupUserData()">Backup Sekarang</button>
                 <button class="btn" onclick="syncUserData(); showAlert('Data diperbarui')">Sync Data</button>
+            </div>
+
+            <!-- PENGATURAN TAMPILAN & EKSPOR -->
+            <div class="card">
+                <h3 style="margin-top:0; font-size:15px; font-weight:600;">Personalisasi & Ekspor</h3>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <span style="font-size:14px;">Mode Gelap (Dark Mode)</span>
+                    <input type="checkbox" id="toggle-dark-mode" onchange="toggleDarkMode()" style="width:auto; cursor:pointer; transform: scale(1.3);">
+                </div>
+                <button class="btn" style="background:#3B82F6; margin-top:5px;" onclick="exportTransactionsCSV()">📊 Export Riwayat ke CSV</button>
             </div>
 
             <div class="card">
@@ -911,8 +962,22 @@
             const nama = document.getElementById('auth-name').value.trim();
             const btnAuth = document.getElementById('btn-auth');
 
-            btnAuth.innerText = "Memproses...";
-            btnAuth.disabled = true;
+            // VALIDASI PIN: KELOMPOK HURUF & MINIMAL 1 ANGKA (MINIMAL 6 KARAKTER)
+            if (isRegisterMode) {
+                const hasNumber = /\d/.test(pin); // Cek apakah ada minimal 1 angka
+                const hasLetter = /[a-zA-Z]/.test(pin); // Cek apakah ada huruf
+
+                if (pin.length < 6) {
+                    showAlert("PIN/Password minimal harus 6 karakter.");
+                    return;
+                }
+                if (!hasNumber || !hasLetter) {
+                    showAlert("PIN harus mengandung kombinasi huruf dan minimal 1 angka.");
+                    return;
+                }
+            }
+
+            showLoading(isRegisterMode ? "Mendaftarkan akun..." : "Masuk ke sistem...");
 
             if (isRegisterMode) {
                 const res = await callAPI({
@@ -921,8 +986,7 @@
                     pin: pin,
                     nama: nama
                 });
-                btnAuth.innerText = "Daftar";
-                btnAuth.disabled = false;
+                hideLoading();
 
                 if (res && res.success) {
                     showAlert("Pendaftaran berhasil! Silakan Masuk.");
@@ -937,8 +1001,7 @@
                     pin: pin
                 });
                 
-                btnAuth.innerText = "Masuk";
-                btnAuth.disabled = false;
+                hideLoading();
 
                 if (res && res.success) {
                     CURRENT_USER = res.userId;
@@ -986,6 +1049,15 @@
                 loadTargetAnggaran();
                 renderHomeBudget();
             }
+        }
+
+        function showLoading(text = "Memproses data ke server...") {
+            document.getElementById('loading-text').innerText = text;
+            document.getElementById('global-loading').style.display = 'flex';
+        }
+
+        function hideLoading() {
+            document.getElementById('global-loading').style.display = 'none';
         }
 
         function switchTab(tab, el) {
@@ -1401,12 +1473,20 @@
             }
 
             const val = input.value;
-            const data = getFilteredTx('month', val);
+            const keyword = document.getElementById('search-riwayat') ? document.getElementById('search-riwayat').value.toLowerCase() : "";
+            
+            // Ambil data berdasarkan bulan, lalu filter lagi berdasarkan kata kunci pencarian jika ada
+            const data = getFilteredTx('month', val).filter(tx => {
+                const desc = (tx.desc || "").toLowerCase();
+                const cat = (tx.category || "").toLowerCase();
+                return desc.includes(keyword) || cat.includes(keyword);
+            });
+
             const container = document.getElementById('list-riwayat');
             container.innerHTML = "";
 
             if (data.length === 0) {
-                container.innerHTML = `<p style="text-align:center; color:var(--text-muted); padding:20px;">Tidak ada transaksi bulan ini.</p>`;
+                container.innerHTML = `<p style="text-align:center; color:var(--text-muted); padding:20px;">Tidak ada transaksi yang cocok.</p>`;
                 return;
             }
 
@@ -2136,6 +2216,122 @@
             }
 
             doc.save("Laporan-" + month + ".pdf");
+        }
+
+        // --- FITUR EKSPOR CSV ---
+        function exportTransactionsCSV() {
+            if (!APP_DATA.transactions || APP_DATA.transactions.length === 0) {
+                showAlert("Tidak ada data transaksi untuk diekspor.");
+                return;
+            }
+
+            let csvContent = "data:text/csv;charset=utf-8,ID,Tanggal,Tipe,Kategori,Rekening,Nominal,Keterangan\n";
+            
+            APP_DATA.transactions.forEach(tx => {
+                let acc = APP_DATA.accounts.find(a => a.id === tx.accountId);
+                let accName = acc ? acc.bank : "-";
+                let row = [
+                    tx.id,
+                    tx.date,
+                    tx.type,
+                    `"${tx.category || ''}"`,
+                    `"${accName}"`,
+                    tx.amount,
+                    `"${(tx.desc || '').replace(/"/g, '""')}"`
+                ];
+                csvContent += row.join(",") + "\n";
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `laporan-transaksi-${CURRENT_USER}-${new Date().toISOString().slice(0, 10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // --- FITUR TOGGLE DARK MODE / LIGHT MODE ---
+        function toggleDarkMode() {
+            const isDark = document.getElementById('toggle-dark-mode').checked;
+            if (isDark) {
+                document.documentElement.style.setProperty('--bg-color', '#0B0F19');
+                document.documentElement.style.setProperty('--card-bg', '#1E293B');
+                document.documentElement.style.setProperty('--text-main', '#F8FAFC');
+                document.documentElement.style.setProperty('--text-muted', '#94A3B8');
+                document.documentElement.style.setProperty('--border-color', '#334155');
+                localStorage.setItem('theme_mode', 'dark');
+            } else {
+                document.documentElement.style.setProperty('--bg-color', '#F8FAFC');
+                document.documentElement.style.setProperty('--card-bg', '#FFFFFF');
+                document.documentElement.style.setProperty('--text-main', '#1E293B');
+                document.documentElement.style.setProperty('--text-muted', '#64748B');
+                document.documentElement.style.setProperty('--border-color', '#E2E8F0');
+                localStorage.setItem('theme_mode', 'light');
+            }
+        }
+
+        // Jalankan pengecekan tema tersimpan saat aplikasi dimuat
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme_mode');
+            if (savedTheme === 'dark') {
+                const checkbox = document.getElementById('toggle-dark-mode');
+                if (checkbox) checkbox.checked = true;
+                toggleDarkMode();
+            }
+        });
+
+        // --- FITUR NOTIFIKASI & PERINGATAN ANGGARAN ---
+        function checkBudgetWarningAfterTx(newTxType, newCategory, newAmount) {
+            if (newTxType !== "expense") return;
+
+            let currentMonth = new Date().toISOString().slice(0, 7);
+            
+            // 1. Cek Anggaran Bulanan Secara Keseluruhan
+            let targetBulanan = Number(APP_DATA.targetAnggaran) || 0;
+            if (targetBulanan > 0) {
+                let totalExpenseBulanIni = 0;
+                (APP_DATA.transactions || []).forEach(tx => {
+                    if (tx.type === "expense" && tx.date.startsWith(currentMonth)) {
+                        if (!(tx.category || '').toLowerCase().includes('tabungan')) {
+                            totalExpenseBulanIni += Number(tx.amount) || 0;
+                        }
+                    }
+                });
+
+                let persentaseBulanan = Math.round((totalExpenseBulanIni / targetBulanan) * 100);
+                if (persentaseBulanan >= 100) {
+                    triggerBudgetAlertModal(`🚨 PERINGATAN: Pengeluaran bulan ini telah mencapai ${persentaseBulanan}% (Melebihi Target Anggaran Bulanan!)`);
+                    return;
+                } else if (persentaseBulanan >= 80) {
+                    triggerBudgetAlertModal(`⚠️ PERHATIAN: Pengeluaran bulan ini sudah mencapai ${persentaseBulanan%` dari target bulanan.`);
+                    return;
+                }
+            }
+
+            // 2. Cek Anggaran Spesifik Per Kategori
+            let catBudgetObj = (APP_DATA.categoryBudgets || []).find(b => b.categoryName === newCategory || b.categoryId == newCategory);
+            if (catBudgetObj) {
+                let limitKategori = Number(catBudgetObj.amount) || 0;
+                let totalExpenseKategori = 0;
+                
+                (APP_DATA.transactions || []).forEach(tx => {
+                    if (tx.type === "expense" && tx.date.startsWith(currentMonth) && tx.category === newCategory) {
+                        totalExpenseKategori += Number(tx.amount) || 0;
+                    }
+                });
+
+                if (totalExpenseKategori >= limitKategori) {
+                    triggerBudgetAlertModal(`🚨 ANGGARAN KATEGORI HABIS: Pengeluaran untuk kategori "${newCategory}" telah melewati batas anggaran (${formatRp(totalExpenseKategori)} / ${formatRp(limitKategori)})!`);
+                }
+            }
+        }
+
+        function triggerBudgetAlertModal(message) {
+            const alertText = document.getElementById('budget-alert-text');
+            if (alertText) alertText.innerText = message;
+            const modal = document.getElementById('modalBudgetAlert');
+            if (modal) modal.style.display = 'flex';
         }
     </script>
 </body>
