@@ -394,7 +394,7 @@
             <form id="formAuth">
                 <input type="text" id="auth-name" placeholder="Nama Lengkap" style="display:none;">
                 <input type="text" id="auth-user" placeholder="Username" required>
-                <input type="password" id="auth-pin" placeholder="PIN (Min. 6 karakter, huruf & angka)" required>>
+                <input type="password" id="auth-pin" placeholder="PIN (Min. 6 karakter, huruf & angka)" required>
                 <button type="submit" class="btn" id="btn-auth">Masuk</button>
             </form>
             <span class="toggle-auth" onclick="toggleAuthMode()" id="auth-toggle-text">Belum punya akun? Daftar di sini</span>
@@ -2312,9 +2312,10 @@
                 if (persentaseBulanan >= 100) {
                     triggerBudgetAlertModal(`🚨 PERINGATAN: Pengeluaran bulan ini telah mencapai ${persentaseBulanan}% (Melebihi Target Anggaran Bulanan!)`);
                     return;
-                } else if (persentaseBulanan >= 80) {
-                    triggerBudgetAlertModal(`⚠️ PERHATIAN: Pengeluaran bulan ini sudah mencapai ${persentaseBulanan%` dari target bulanan.`);
-                    return;
+                // BENAR
+                else if (persentaseBulanan >= 80) {
+                triggerBudgetAlertModal(`⚠️ PERHATIAN: Pengeluaran bulan ini sudah mencapai ${persentaseBulanan}% dari target bulanan.`);
+                return;
                 }
             }
 
