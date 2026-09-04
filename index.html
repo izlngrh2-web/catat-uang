@@ -2151,7 +2151,7 @@
             document.getElementById('modalRek').style.display = 'flex';
         }
 
-        function updateTxTypeUI() {
+       function updateTxTypeUI() {
             const type = document.getElementById('tx-type').value;
             const cat = document.getElementById('tx-cat');
             const tujuan = document.getElementById('tx-to-account');
@@ -2159,6 +2159,7 @@
 
             if (!cat || !tujuan || !goal) return;
 
+            // Mengatur visibilitas target tabungan
             if (type === "expense") {
                 goal.style.display = "block";
             } else {
@@ -2166,17 +2167,31 @@
                 document.getElementById('tx-goal').value = "";
             }
 
+            // Mengatur visibilitas dan kewajiban isi (required)
             if (type === "transfer") {
                 cat.style.display = "none";
+                cat.required = false;            // Matikan required kategori
+                
                 tujuan.style.display = "block";
+                tujuan.required = true;         // Wajibkan isi rekening tujuan
+                
                 goal.style.display = "none";
             } else if (type === "expense") {
                 cat.style.display = "block";
+                cat.required = true;            // Wajibkan isi kategori
+                
                 tujuan.style.display = "none";
+                tujuan.required = false;        // Matikan required rekening tujuan
+                
                 goal.style.display = "block";
             } else {
+                // Untuk Pemasukan (Income)
                 cat.style.display = "block";
+                cat.required = true;            // Wajibkan isi kategori
+                
                 tujuan.style.display = "none";
+                tujuan.required = false;        // Matikan required rekening tujuan
+                
                 goal.style.display = "none";
             }
         }
