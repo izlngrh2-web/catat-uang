@@ -1970,6 +1970,22 @@
             });
         }
 
+        function openCategoryBudgetModal() {
+            const select = document.getElementById("budget-category-select");
+            if (!select) return;
+            
+            // Masukkan pilihan kategori yang berjenis pengeluaran (expense)
+            select.innerHTML = `<option value="">Pilih Kategori</option>`;
+            
+            const expenseCategories = APP_DATA.categories.filter(c => c.type === "expense");
+            expenseCategories.forEach(c => {
+                select.innerHTML += `<option value="${c.id || c.name}">${c.name}</option>`;
+            });
+            
+            // Tampilkan modal anggaran kategori
+            document.getElementById("modalCategoryBudget").style.display = "flex";
+        }
+
         function exportLaporanPDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
