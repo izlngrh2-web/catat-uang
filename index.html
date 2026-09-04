@@ -974,9 +974,13 @@
 
         document.getElementById('formAuth').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const user = document.getElementById('auth-user').value;
-            const pin = document.getElementById('auth-pin').value;
-            const nama = document.getElementById('auth-name').value;
+            const user = document.getElementById('auth-user').value.trim();
+            const pin = document.getElementById('auth-pin').value.trim();
+            const nama = document.getElementById('auth-name').value.trim();
+            const btnAuth = document.getElementById('btn-auth');
+
+            btnAuth.innerText = "Memproses...";
+            btnAuth.disabled = true;
 
             if (isRegisterMode) {
                 const res = await callAPI({
@@ -985,11 +989,14 @@
                     pin: pin,
                     nama: nama
                 });
-                if (res.success) {
+                btnAuth.innerText = "Daftar";
+                btnAuth.disabled = false;
+
+                if (res && res.success) {
                     showAlert("Pendaftaran berhasil! Silakan Masuk.");
                     toggleAuthMode();
                 } else {
-                    showAlert(res.message);
+                    showAlert(res ? res.message : "Terjadi kesalahan server.");
                 }
             } else {
                 const res = await callAPI({
@@ -997,14 +1004,16 @@
                     username: user,
                     pin: pin
                 });
+                
+                btnAuth.innerText = "Masuk";
+                btnAuth.disabled = false;
 
-                if (res.success) {
+                if (res && res.success) {
                     CURRENT_USER = res.userId;
                     localStorage.setItem('auth_user_id', CURRENT_USER);
-                    await syncUserData();
                     showApp();
                 } else {
-                    showAlert(res.message);
+                    showAlert(res ? res.message : "Gagal masuk, periksa koneksi atau username/PIN Anda.");
                 }
             }
         });
