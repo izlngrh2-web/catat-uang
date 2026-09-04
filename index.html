@@ -594,14 +594,6 @@
             </div>
 
             <div class="card">
-                <h3 style="margin-top:0; font-size:15px; font-weight:600;">🎯 Target Keuangan</h3>
-                <input id="goal-name" placeholder="Contoh: Beli Laptop">
-                <input type="number" id="goal-target" placeholder="Target (Rp)">
-                <input type="number" id="goal-current" placeholder="Dana terkumpul">
-                <button class="btn" onclick="saveGoal()">Simpan Target</button>
-            </div>
-
-            <div class="card">
                 <div class="flex-between" style="margin-bottom: 12px;">
                     <h3 style="margin:0; font-size: 15px; font-weight: 600;">Kelola Rekening / Dompet</h3>
                     <button class="btn" style="width:auto; padding:6px 12px; font-size: 12px;" onclick="openRekModal()">+ Tambah</button>
@@ -610,17 +602,10 @@
             </div>
             
             <div class="card">
-                <h3 style="margin-top:0;font-size:15px;font-weight:600;">Backup Data</h3>
-                <p style="font-size:12px;color:var(--text-muted)">Simpan semua transaksi, rekening, kategori, dan anggaran akun ini.</p>
+                <h3 style="margin-top:0;font-size:15px;font-weight:600;">Backup Data Cloud</h3>
+                <p style="font-size:12px;color:var(--text-muted)">Unduh cadangan data dari server database.</p>
                 <button class="btn" style="margin-bottom: 10px;" onclick="backupUserData()">Backup Sekarang</button>
                 <button class="btn" onclick="syncUserData(); showAlert('Data diperbarui')">Sync Data</button>
-            </div>
-            
-            <div class="card">
-                <h3 style="margin-top:0;font-size:15px;font-weight:600;">Restore Data</h3>
-                <p style="font-size:12px;color:var(--text-muted)">Kembalikan data dari file backup akun ini.</p>
-                <input type="file" id="restore-file" accept=".json" style="font-size:12px;">
-                <button class="btn" onclick="restoreUserData()">Restore Sekarang</button>
             </div>
 
             <div class="card">
@@ -843,76 +828,23 @@
         function showApp() {
             document.getElementById("auth-container").style.display = "none";
             document.getElementById("app-container").style.display = "block";
+            
             if (CURRENT_USER && typeof initApp === 'function') {
-                initApp();
+                initApp().then(() => {
+                    const savedTab = localStorage.getItem('active_tab');
+                    if (savedTab && savedTab !== 'home') {
+                        const navIndexMap = { 'riwayat': 1, 'grafik': 2, 'laporan': 4, 'saya': 5 };
+                        const navElement = document.querySelectorAll('.nav-item')[navIndexMap[savedTab]];
+                        if (navElement) {
+                            switchTab(savedTab, navElement);
+                        }
+                    }
+                });
             }
         }
 
         async function syncUserData() {
             await initApp();
-        }
-
-        async function saveCategoryBudget() {
-            const categoryId = document.getElementById('budget-category-select').value;
-            const amount = document.getElementById('budget-category-amount').value;
-
-            if (!categoryId || !amount) {
-                showAlert("Pilih kategori dan masukkan batas anggaran dengan benar.");
-                return;
-            }
-
-            const res = await callAPI({
-                action: 'simpanCategoryBudget',
-                userId: CURRENT_USER,
-                categoryId: categoryId,
-                amount: amount
-            });
-
-            if (res.success) {
-                showAlert("Anggaran kategori berhasil disimpan ke server!");
-                document.getElementById('modalCategoryBudget').style.display = 'none';
-                document.getElementById('budget-category-amount').value = '';
-                await initApp(); // Memuat ulang data terbaru dari cloud
-            } else {
-                showAlert("Gagal menyimpan: " + res.message);
-            }
-        }
-
-        function renderCategoryBudgets() {
-            const cont = document.getElementById('list-category-budget-setting');
-            if (!cont) return;
-
-            const budgets = APP_DATA.categoryBudgets || [];
-            if (budgets.length === 0) {
-                cont.innerHTML = '<p style="text-align:center; color:var(--text-muted); font-size:13px; padding:10px 0;">Belum ada anggaran kategori.</p>';
-                return;
-            }
-
-            cont.innerHTML = budgets.map(b => {
-                let catObj = APP_DATA.categories.find(c => c.id == b.categoryId || c.name === b.categoryName);
-                let catName = catObj ? catObj.name : (b.categoryName || "Kategori");
-                return `
-                <div class="cat-list-item">
-                    <div>
-                        <strong style="font-weight:600;">${catName}</strong><br>
-                        <span style="font-size:12px; color:var(--accent); font-weight:600;">Batas: ${formatRp(b.amount)}</span>
-                    </div>
-                    <div>
-                        <button class="btn-del" onclick="hapusCategoryBudget('${b.id}')">Hapus</button>
-                    </div>
-                </div>`;
-            }).join('');
-        }
-
-        async function hapusCategoryBudget(id) {
-            showConfirm("Yakin ingin menghapus anggaran kategori ini?", async function() {
-                const res = await callAPI({ action: 'hapusCategoryBudget', userId: CURRENT_USER, id: id });
-                if (res.success) {
-                    await initApp();
-                } else {
-                    showAlert("Gagal menghapus: " + res.message);
-                }
-            });
         }
 
         function showConfirm(message, onYes) {
@@ -1011,6 +943,7 @@
                 if (res && res.success) {
                     CURRENT_USER = res.userId;
                     localStorage.setItem('auth_user_id', CURRENT_USER);
+                    await syncUserData();
                     showApp();
                 } else {
                     showAlert(res ? res.message : "Gagal masuk, periksa koneksi atau username/PIN Anda.");
@@ -1059,7 +992,9 @@
             document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(v => v.classList.remove('active'));
             document.getElementById(`view-${tab}`).classList.add('active');
-            el.classList.add('active');
+            if (el) el.classList.add('active');
+
+            localStorage.setItem('active_tab', tab);
 
             const titles = {
                 'home': 'Beranda',
@@ -1083,6 +1018,7 @@
             if (tab === 'saya') {
                 renderAccountSettings();
                 renderCategorySettings();
+                renderCategoryBudgets();
             }
         }
 
@@ -1171,12 +1107,44 @@
 
             document.getElementById('home-account-list').innerHTML = htmlRek;
 
-            let txHtml = "";
+            renderHomeLastTransaction();
+            let score = renderFinancialScore();
+            document.getElementById("finance-status-text").innerHTML = "Financial Score: " + score + "/100";
+            renderGoal();
+            renderFinanceStatus();
+            renderHomeBudget();
+        }
+
+        function renderSyncStatus() {
+            const box = document.getElementById("sync-status");
+            if (!box) return;
+            box.innerHTML = "🔄 Data tersinkronisasi ke Cloud Server";
+        }
+
+        function quickTransaction(type) {
+            openTxModal();
+            setTimeout(() => {
+                document.getElementById('tx-type').value = type;
+                populateCategories();
+                updateTxTypeUI();
+            }, 100);
+        }
+
+        function renderHomeLastTransaction() {
+            const box = document.getElementById('home-last-transaction');
+            if (!box) return;
+            
+            if (!APP_DATA.transactions || APP_DATA.transactions.length === 0) {
+                box.innerHTML = `<div class="card" style="text-align:center; color:var(--text-muted);">Belum ada transaksi</div>`;
+                return;
+            }
+
             const iconMap = {
                 "Makanan": "🍔", "Belanja": "🛒", "Transportasi": "🚗", "Tagihan": "📄", 
                 "Hiburan": "🎮", "Gaji": "💰", "Bonus": "🎁", "Investasi": "📈"
             };
 
+            let txHtml = "";
             [...APP_DATA.transactions]
             .sort((a, b) => new Date(b.date) - new Date(a.date))
             .slice(0, 5)
@@ -1204,35 +1172,103 @@
                 <div class="card" style="display:flex; align-items:center; gap:12px; padding:14px; margin-bottom:10px;">
                     <div style="width:42px; height:42px; border-radius:14px; background:${isTransfer? '#DBEAFE': isIncome? '#DCFCE7': '#FEE2E2'}; display:flex; align-items:center; justify-content:center; font-size:22px;">${icon}</div>
                     <div style="flex:1;">
-                        <div style="font-weight:600; font-size:14px;">${tx.desc}</div>
+                        <div style="font-weight:600; font-size:14px;">${tx.desc || tx.category}</div>
                         <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">${namaRek} • ${labelTanggal}</div>
                     </div>
-                    <div class="${warna}" style="font-weight:700; font-size:14px;">${tanda} ${formatRupiah(tx.amount)}</div>
+                    <div class="${warna}" style="font-weight:700; font-size:14px;">${tanda} ${formatRp(tx.amount)}</div>
                 </div>`;
             });
 
-            document.getElementById('home-last-transaction').innerHTML = txHtml || `<div style="text-align:center; color:var(--text-muted); padding:20px;">Belum ada transaksi</div>`;
-
-            let score = renderFinancialScore();
-            document.getElementById("finance-status-text").innerHTML = "Financial Score: " + score + "/100";
-            renderGoal();
-            renderFinanceStatus();
-            renderHomeBudget();
+            box.innerHTML = txHtml;
         }
 
-        function renderSyncStatus() {
-            const box = document.getElementById("sync-status");
-            if (!box) return;
-            box.innerHTML = "🔄 Data tersinkronisasi ke Cloud Server";
+        function renderHomeBudget() {
+            let target = Number(APP_DATA.targetAnggaran) || 0;
+            let expense = 0;
+
+            const now = new Date();
+            const currentMonth = now.toISOString().slice(0, 7);
+
+            (APP_DATA.transactions || []).forEach(tx => {
+                if (tx.type === "expense" && tx.date.startsWith(currentMonth)) {
+                    if (!(tx.category || '').toLowerCase().includes('tabungan')) {
+                        expense += Number(tx.amount) || 0;
+                    }
+                }
+            });
+
+            let persen = target > 0 ? Math.min(Math.round((expense / target) * 100), 100) : 0;
+            let sisa = Math.max(target - expense, 0);
+
+            const elPercent = document.getElementById("home-budget-percent");
+            const elBar = document.getElementById("home-budget-bar");
+            const elLeft = document.getElementById("home-budget-left");
+
+            if (elPercent) elPercent.innerHTML = persen + "%";
+            if (elBar) elBar.style.width = persen + "%";
+            if (elLeft) elLeft.innerHTML = formatRp(sisa);
         }
 
-        function quickTransaction(type) {
-            openTxModal();
-            setTimeout(() => {
-                document.getElementById('tx-type').value = type;
-                populateCategories();
-                updateTxTypeUI();
-            }, 100);
+        function renderFinanceStatus() {
+            let saldo = APP_DATA.accounts.reduce((a, b) => a + Number(b.balance || 0), 0);
+            let expense = APP_DATA.transactions.filter(t => t.type === "expense").reduce((a, b) => a + Number(b.amount), 0);
+            let icon = document.getElementById("finance-status-icon");
+            let status = document.getElementById("finance-status");
+            let text = document.getElementById("finance-status-text");
+
+            if (!icon || !status || !text) return;
+
+            if (expense < saldo * 0.3) {
+                icon.innerHTML = "🟢";
+                status.innerHTML = "Aman";
+                text.innerHTML = "Pengeluaran masih sangat terkendali";
+            } else if (expense < saldo * 0.7) {
+                icon.innerHTML = "🟡";
+                status.innerHTML = "Perhatikan";
+                text.innerHTML = "Pengeluaran mulai meningkat";
+            } else {
+                icon.innerHTML = "🔴";
+                status.innerHTML = "Waspada";
+                text.innerHTML = "Pengeluaran mendekati saldo";
+            }
+        }
+
+        function renderFinancialScore() {
+            let saldo = (APP_DATA.accounts || []).reduce((a, b) => a + Number(b.balance || 0), 0);
+            let income = 0;
+            let expense = 0;
+            const now = new Date();
+
+            (APP_DATA.transactions || []).forEach(t => {
+                let d = new Date(t.date);
+                if (d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()) {
+                    if (t.type === "income") income += Number(t.amount);
+                    if (t.type === "expense") expense += Number(t.amount);
+                }
+            });
+
+            let score = 0;
+            if (income > expense) score += 20;
+            else score += 10;
+
+            if (saldo > 0) {
+                let ratio = expense / saldo;
+                if (ratio < 0.3) score += 40;
+                else if (ratio < 0.6) score += 25;
+                else score += 10;
+            }
+
+            let budget = Number(APP_DATA.targetAnggaran) || 0;
+            if (budget) {
+                let penggunaan = expense / budget;
+                if (penggunaan < 0.5) score += 30;
+                else if (penggunaan < 0.8) score += 20;
+                else score += 5;
+            } else {
+                score += 15;
+            }
+
+            return Math.min(score, 100);
         }
 
         function renderGoal() {
@@ -1500,8 +1536,8 @@
                 data: {
                     labels: ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"],
                     datasets: [
-                        { label: "Pemasukan", data: income },
-                        { label: "Pengeluaran", data: expense }
+                        { label: "Pemasukan", data: income, backgroundColor: '#10B981' },
+                        { label: "Pengeluaran", data: expense, backgroundColor: '#EF4444' }
                     ]
                 },
                 options: {
@@ -1659,7 +1695,10 @@
         }
 
         function loadTargetAnggaran() {
-            document.getElementById('input-target-anggaran').value = APP_DATA.targetAnggaran || '';
+            const targetInput = document.getElementById('input-target-anggaran');
+            if (targetInput) {
+                targetInput.value = APP_DATA.targetAnggaran || '';
+            }
         }
 
         document.getElementById('formAnggaran').addEventListener('submit', async (e) => {
@@ -1670,6 +1709,7 @@
                 APP_DATA.targetAnggaran = parseFloat(target) || 0;
                 showAlert("Target anggaran berhasil disimpan ke cloud!");
                 renderLaporan();
+                renderHomeBudget();
             } else {
                 showAlert("Gagal menyimpan: " + res.message);
             }
@@ -1688,6 +1728,7 @@
 
         function renderAccountSettings() {
             const cont = document.getElementById('list-rekening-setting');
+            if(!cont) return;
             cont.innerHTML = APP_DATA.accounts.map(acc => `
                 <div class="cat-list-item">
                     <div><strong>${acc.bank}</strong> (${acc.number})<br><span style="font-size:12px; color:var(--accent); font-weight:600;">Saldo: ${formatRp(acc.balance)}</span></div>
@@ -1700,7 +1741,84 @@
 
         function renderCategorySettings() {
             const cont = document.getElementById('list-kategori-setting');
+            if(!cont) return;
             cont.innerHTML = APP_DATA.categories.map(c => `<div class="cat-list-item"><span>${c.name}</span><span style="font-size:11px; background:#F1F5F9; padding:2px 8px; border-radius:4px;">${c.type}</span></div>`).join('');
+        }
+
+        function openCategoryBudgetModal() {
+            const select = document.getElementById("budget-category-select");
+            if (!select) return;
+            
+            select.innerHTML = `<option value="">Pilih Kategori</option>`;
+            const expenseCategories = APP_DATA.categories.filter(c => c.type === "expense");
+            expenseCategories.forEach(c => {
+                select.innerHTML += `<option value="${c.id || c.name}">${c.name}</option>`;
+            });
+            
+            document.getElementById("modalCategoryBudget").style.display = "flex";
+        }
+
+        async function saveCategoryBudget() {
+            const categoryId = document.getElementById('budget-category-select').value;
+            const amount = document.getElementById('budget-category-amount').value;
+
+            if (!categoryId || !amount) {
+                showAlert("Pilih kategori dan masukkan batas anggaran dengan benar.");
+                return;
+            }
+
+            const res = await callAPI({
+                action: 'simpanCategoryBudget',
+                userId: CURRENT_USER,
+                categoryId: categoryId,
+                amount: amount
+            });
+
+            if (res.success) {
+                showAlert("Anggaran kategori berhasil disimpan ke server!");
+                document.getElementById('modalCategoryBudget').style.display = 'none';
+                document.getElementById('budget-category-amount').value = '';
+                await initApp();
+            } else {
+                showAlert("Gagal menyimpan: " + res.message);
+            }
+        }
+
+        function renderCategoryBudgets() {
+            const cont = document.getElementById('list-category-budget-setting');
+            if (!cont) return;
+
+            const budgets = APP_DATA.categoryBudgets || [];
+            if (budgets.length === 0) {
+                cont.innerHTML = '<p style="text-align:center; color:var(--text-muted); font-size:13px; padding:10px 0;">Belum ada anggaran kategori.</p>';
+                return;
+            }
+
+            cont.innerHTML = budgets.map(b => {
+                let catObj = APP_DATA.categories.find(c => c.id == b.categoryId || c.name === b.categoryName);
+                let catName = catObj ? catObj.name : (b.categoryName || "Kategori");
+                return `
+                <div class="cat-list-item">
+                    <div>
+                        <strong style="font-weight:600;">${catName}</strong><br>
+                        <span style="font-size:12px; color:var(--accent); font-weight:600;">Batas: ${formatRp(b.amount)}</span>
+                    </div>
+                    <div>
+                        <button class="btn-del" onclick="hapusCategoryBudget('${b.id}')">Hapus</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        async function hapusCategoryBudget(id) {
+            showConfirm("Yakin ingin menghapus anggaran kategori ini?", async function() {
+                const res = await callAPI({ action: 'hapusCategoryBudget', userId: CURRENT_USER, id: id });
+                if (res.success) {
+                    await initApp();
+                } else {
+                    showAlert("Gagal menghapus: " + res.message);
+                }
+            });
         }
 
         function handleBankSelection() {
@@ -1966,10 +2084,6 @@
             showAlert("Backup berhasil diunduh.");
         }
 
-        function restoreUserData() {
-            showAlert("Fitur Restore via Cloud belum diaktifkan demi keamanan data publik.");
-        }
-
         function populateGoals() {
             const select = document.getElementById('tx-goal');
             if (!select) return;
@@ -1978,22 +2092,6 @@
             APP_DATA.goals.forEach(goal => {
                 select.innerHTML += `<option value="${goal.id}">${goal.name}</option>`;
             });
-        }
-
-        function openCategoryBudgetModal() {
-            const select = document.getElementById("budget-category-select");
-            if (!select) return;
-            
-            // Masukkan pilihan kategori yang berjenis pengeluaran (expense)
-            select.innerHTML = `<option value="">Pilih Kategori</option>`;
-            
-            const expenseCategories = APP_DATA.categories.filter(c => c.type === "expense");
-            expenseCategories.forEach(c => {
-                select.innerHTML += `<option value="${c.id || c.name}">${c.name}</option>`;
-            });
-            
-            // Tampilkan modal anggaran kategori
-            document.getElementById("modalCategoryBudget").style.display = "flex";
         }
 
         function exportLaporanPDF() {
